@@ -31,7 +31,7 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "bin": {
-    "positioning-bridge": "./dist/cli/main.js"
+    "positioning-bridge": "dist/cli/main.js"
   },
   "exports": {
     ".": {

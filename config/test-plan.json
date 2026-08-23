@@ -1,0 +1,403 @@
+{
+  "schema_version": "1.0.0",
+  "requirements": [
+    {
+      "id": "PB-001",
+      "acceptance_examples": [
+        "A validated repository pack is the only policy input used by a check."
+      ]
+    },
+    {
+      "id": "PB-002",
+      "acceptance_examples": [
+        "A pack with a reused policy ID is rejected with the conflicting path."
+      ]
+    },
+    {
+      "id": "PB-003",
+      "acceptance_examples": [
+        "An externally checkable approved claim without a source is rejected."
+      ]
+    },
+    {
+      "id": "PB-004",
+      "acceptance_examples": [
+        "Duplicate IDs, bad references, selectors, levels, and missing evidence fail validation."
+      ]
+    },
+    {
+      "id": "PB-010",
+      "acceptance_examples": [
+        "A check requires explicit audience, channel, funnel stage, locale, and optional campaign context."
+      ]
+    },
+    {
+      "id": "PB-011",
+      "acceptance_examples": [
+        "Changing one context field changes only the matching messages and rules."
+      ]
+    },
+    {
+      "id": "PB-012",
+      "acceptance_examples": [
+        "Missing must, should, and opportunity messages have distinct decision effects."
+      ]
+    },
+    {
+      "id": "PB-013",
+      "acceptance_examples": [
+        "The resolved result lists every applicable policy ID and message requirement."
+      ]
+    },
+    {
+      "id": "PB-020",
+      "acceptance_examples": [
+        "Checks return pass, needs_revision, or blocked without a composite score."
+      ]
+    },
+    {
+      "id": "PB-021",
+      "acceptance_examples": [
+        "Each supported finding type is produced by its matching configured policy."
+      ]
+    },
+    {
+      "id": "PB-022",
+      "acceptance_examples": [
+        "A triggered finding includes policy ID, severity, certainty, rationale, evidence, and location."
+      ]
+    },
+    {
+      "id": "PB-023",
+      "acceptance_examples": [
+        "Suggestions repair a bounded message and never replace the submitted draft."
+      ]
+    },
+    {
+      "id": "PB-024",
+      "acceptance_examples": [
+        "Repeated deterministic checks produce deeply equal, stably sorted results."
+      ]
+    },
+    {
+      "id": "PB-030",
+      "acceptance_examples": [
+        "Confirmed and model-assisted findings expose different certainty labels."
+      ]
+    },
+    {
+      "id": "PB-031",
+      "acceptance_examples": [
+        "With no semantic adapter, deterministic checks run and semantic status is not_run."
+      ]
+    },
+    {
+      "id": "PB-032",
+      "acceptance_examples": [
+        "A semantic contradiction remains model_assisted, warns, and needs human review."
+      ]
+    },
+    {
+      "id": "PB-033",
+      "acceptance_examples": [
+        "Only a matching deterministic contradiction rule creates a confirmed contradiction."
+      ]
+    },
+    {
+      "id": "PB-040",
+      "acceptance_examples": [
+        "A competitive claim without active approval, named competitor, qualifier, and evidence is flagged."
+      ]
+    },
+    {
+      "id": "PB-041",
+      "acceptance_examples": [
+        "A prohibited competitor claim with block enforcement returns a confirmed blocking finding."
+      ]
+    },
+    {
+      "id": "PB-042",
+      "acceptance_examples": [
+        "A campaign resolves its narrative, action, requirements, avoid list, and proof references."
+      ]
+    },
+    {
+      "id": "PB-043",
+      "acceptance_examples": [
+        "Campaign requirements narrow company policy without approving a prohibited company claim."
+      ]
+    },
+    {
+      "id": "PB-050",
+      "acceptance_examples": [
+        "Architecture policy proves the domain and application layers have no MCP, model, network, or HYV dependency."
+      ]
+    },
+    {
+      "id": "PB-051",
+      "acceptance_examples": [
+        "CLI init, validate, check, and serve commands expose their documented contracts."
+      ]
+    },
+    {
+      "id": "PB-052",
+      "acceptance_examples": [
+        "All MCP tools publish structured schemas and read-only closed-world annotations."
+      ]
+    },
+    {
+      "id": "PB-053",
+      "acceptance_examples": [
+        "MCP lists and executes context, brief, check, and explanation tools."
+      ]
+    },
+    {
+      "id": "PB-054",
+      "acceptance_examples": [
+        "CLI JSON and MCP structured output equal the shared service result for one input."
+      ]
+    },
+    {
+      "id": "PB-055",
+      "acceptance_examples": [
+        "A spawned stdio server completes an MCP handshake without protocol text on stderr."
+      ]
+    },
+    {
+      "id": "PB-060",
+      "acceptance_examples": [
+        "Default execution completes offline and leaves no submitted draft artifact."
+      ]
+    },
+    {
+      "id": "PB-061",
+      "acceptance_examples": [
+        "The process loads only the explicitly configured pack path."
+      ]
+    },
+    {
+      "id": "PB-062",
+      "acceptance_examples": [
+        "Oversized packs, files, and stdin fail with the configured byte limit."
+      ]
+    },
+    {
+      "id": "PB-063",
+      "acceptance_examples": [
+        "Instruction-like draft text is evaluated only as literal data signals."
+      ]
+    },
+    {
+      "id": "PB-064",
+      "acceptance_examples": [
+        "Every public MCP tool is read-only and no CLI command mutates policy except explicit init."
+      ]
+    },
+    {
+      "id": "PB-070",
+      "acceptance_examples": [
+        "The repository documentation check confirms all required OSS files and local links."
+      ]
+    },
+    {
+      "id": "PB-071",
+      "acceptance_examples": [
+        "The CI definition runs format, lint, type, unit, integration, package, and dependency checks."
+      ]
+    },
+    {
+      "id": "PB-072",
+      "acceptance_examples": [
+        "A clean tarball install on a supported Node version exposes only expected release files and a working binary."
+      ]
+    },
+    {
+      "id": "PB-073",
+      "acceptance_examples": [
+        "A new user can follow the documented CLI and local MCP quick starts without unpublished services."
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "kind": "unit",
+      "requirement_ids": [
+        "PB-001",
+        "PB-002",
+        "PB-003",
+        "PB-004",
+        "PB-010",
+        "PB-011",
+        "PB-012",
+        "PB-013",
+        "PB-020",
+        "PB-021",
+        "PB-022",
+        "PB-023",
+        "PB-024",
+        "PB-030",
+        "PB-031",
+        "PB-032",
+        "PB-033",
+        "PB-040",
+        "PB-041",
+        "PB-042",
+        "PB-043",
+        "PB-050",
+        "PB-051",
+        "PB-052",
+        "PB-053",
+        "PB-054",
+        "PB-055",
+        "PB-060",
+        "PB-061",
+        "PB-062",
+        "PB-063",
+        "PB-064",
+        "PB-070",
+        "PB-071",
+        "PB-072",
+        "PB-073"
+      ],
+      "status": "PASS",
+      "owner": "maintainers",
+      "evidence": "build/evidence/test-evidence.json",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "acceptance",
+      "requirement_ids": [
+        "PB-001",
+        "PB-002",
+        "PB-003",
+        "PB-004",
+        "PB-010",
+        "PB-011",
+        "PB-012",
+        "PB-013",
+        "PB-020",
+        "PB-021",
+        "PB-022",
+        "PB-023",
+        "PB-024",
+        "PB-030",
+        "PB-031",
+        "PB-032",
+        "PB-033",
+        "PB-040",
+        "PB-041",
+        "PB-042",
+        "PB-043",
+        "PB-050",
+        "PB-051",
+        "PB-052",
+        "PB-053",
+        "PB-054",
+        "PB-055",
+        "PB-060",
+        "PB-061",
+        "PB-062",
+        "PB-063",
+        "PB-064",
+        "PB-070",
+        "PB-071",
+        "PB-072",
+        "PB-073"
+      ],
+      "status": "PASS",
+      "owner": "requirements test track",
+      "evidence": "build/evidence/test-evidence.json",
+      "context_source": "requirements"
+    },
+    {
+      "kind": "integration",
+      "requirement_ids": [
+        "PB-001",
+        "PB-002",
+        "PB-003",
+        "PB-004",
+        "PB-010",
+        "PB-011",
+        "PB-012",
+        "PB-013",
+        "PB-020",
+        "PB-021",
+        "PB-022",
+        "PB-023",
+        "PB-024",
+        "PB-030",
+        "PB-031",
+        "PB-032",
+        "PB-033",
+        "PB-040",
+        "PB-041",
+        "PB-042",
+        "PB-043",
+        "PB-050",
+        "PB-051",
+        "PB-052",
+        "PB-053",
+        "PB-054",
+        "PB-055",
+        "PB-060",
+        "PB-061",
+        "PB-062",
+        "PB-063",
+        "PB-064",
+        "PB-070",
+        "PB-071",
+        "PB-072",
+        "PB-073"
+      ],
+      "status": "PASS",
+      "owner": "protocol and package test track",
+      "evidence": "build/evidence/test-evidence.json",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "ui-qa",
+      "requirement_ids": [
+        "PB-001",
+        "PB-002",
+        "PB-003",
+        "PB-004",
+        "PB-010",
+        "PB-011",
+        "PB-012",
+        "PB-013",
+        "PB-020",
+        "PB-021",
+        "PB-022",
+        "PB-023",
+        "PB-024",
+        "PB-030",
+        "PB-031",
+        "PB-032",
+        "PB-033",
+        "PB-040",
+        "PB-041",
+        "PB-042",
+        "PB-043",
+        "PB-050",
+        "PB-051",
+        "PB-052",
+        "PB-053",
+        "PB-054",
+        "PB-055",
+        "PB-060",
+        "PB-061",
+        "PB-062",
+        "PB-063",
+        "PB-064",
+        "PB-070",
+        "PB-071",
+        "PB-072",
+        "PB-073"
+      ],
+      "status": "PASS",
+      "owner": "CLI and MCP QA",
+      "evidence": "build/evidence/test-evidence.json",
+      "context_source": "requirements"
+    }
+  ]
+}

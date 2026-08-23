@@ -1,0 +1,77 @@
+{
+  "name": "positioning-bridge",
+  "version": "0.1.0",
+  "description": "Evidence-backed positioning policy checks for content workflows, CLI, and MCP.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Positioning Bridge contributors",
+  "keywords": [
+    "positioning",
+    "messaging",
+    "content-governance",
+    "mcp",
+    "model-context-protocol",
+    "marketing"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "positioning-bridge": "./dist/cli/main.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
+    },
+    "./schema": "./schemas/positioning-pack.schema.json"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "schema:generate": "npm run build && node scripts/generate-schema.mjs",
+    "schema:check": "npm run build && node scripts/generate-schema.mjs --check",
+    "architecture:graph": "node scripts/dependency-graph.mjs",
+    "architecture:check": "npm run architecture:graph && node scripts/check-architecture.mjs",
+    "docs:check": "node scripts/check-docs.mjs",
+    "smoke:stdio": "node scripts/smoke-stdio.mjs",
+    "smoke:package": "node scripts/smoke-package.mjs",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run schema:check && npm run architecture:check && npm run docs:check && npm run build && npm run smoke:stdio",
+    "prepublishOnly": "npm run verify",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@shashanksn/clean-code": "0.4.0",
+    "@types/node": "26.2.0",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.9.0",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,202 @@
+schemaVersion: "1"
+id: acme-positioning
+name: Acme positioning
+version: "2026.08"
+description:
+  Fictional example. Every company claim and source below is invented for the demo.
+defaultLocale: en
+
+contexts:
+  audiences:
+    - id: platform-leader
+      name: Platform leader
+    - id: content-leader
+      name: Content leader
+  channels:
+    - id: landing-page
+      name: Landing page
+    - id: blog
+      name: Blog
+  funnelStages:
+    - id: awareness
+      name: Awareness
+    - id: consideration
+      name: Consideration
+  locales:
+    - id: en
+      name: English
+
+sources:
+  - id: source.positioning
+    label: Approved positioning memo
+    status: approved
+    visibility: internal
+    verifiedAt: 2026-08-01
+    expiresAt: 2027-08-01
+    notes: Fictional source for this example.
+  - id: source.security
+    label: Public security page
+    status: approved
+    visibility: public
+    uri: https://example.com/security
+    verifiedAt: 2026-08-02
+    expiresAt: 2027-08-02
+    notes: Fictional source for this example.
+  - id: source.competitor
+    label: Competitive review
+    status: approved
+    visibility: internal
+    verifiedAt: 2026-08-03
+    expiresAt: 2027-02-01
+    notes: Fictional source for this example.
+
+pillars:
+  - id: pillar.control
+    name: Company control
+    thesis: Positioning policy stays under company control.
+    value: Writers use current decisions without searching old strategy decks.
+    signals:
+      - policy stays under company control
+      - current positioning policy
+    sourceIds:
+      - source.positioning
+    requirement:
+      level: must
+      selectors:
+        audienceIds:
+          - platform-leader
+        channelIds:
+          - landing-page
+        funnelStageIds:
+          - consideration
+        localeIds:
+          - en
+  - id: pillar.evidence
+    name: Evidence with every finding
+    thesis: Every finding points back to an approved positioning decision.
+    value: A writer can verify why the check fired.
+    signals:
+      - evidence with every finding
+      - verify why the check fired
+    sourceIds:
+      - source.positioning
+    requirement:
+      level: opportunity
+
+claims:
+  - id: claim.no-training
+    name: No training on customer content
+    statement: Acme does not train models on submitted customer content.
+    kind: fact
+    status: approved
+    enforcement: warn
+    signals:
+      - does not train models on submitted customer content
+    sourceIds:
+      - source.security
+    qualifiers:
+      - Applies to the fictional standard hosted product.
+    requirement:
+      level: should
+      selectors:
+        channelIds:
+          - landing-page
+        localeIds:
+          - en
+  - id: claim.rival-speed
+    name: RivalSuite speed comparison
+    statement: Acme is twice as fast as RivalSuite.
+    kind: comparison
+    status: review_required
+    enforcement: warn
+    signals:
+      - twice as fast as RivalSuite
+    sourceIds:
+      - source.competitor
+    competitorId: competitor.rival-suite
+  - id: claim.only-tool
+    name: Only tool claim
+    statement: Acme is the only positioning tool.
+    kind: superlative
+    status: prohibited
+    enforcement: block
+    signals:
+      - the only positioning tool
+    sourceIds:
+      - source.competitor
+
+competitors:
+  - id: competitor.rival-suite
+    name: RivalSuite
+    category: Enterprise writing platform
+    aliases:
+      - RivalSuite
+      - Rival Suite
+    sourceIds:
+      - source.competitor
+
+campaigns:
+  - id: campaign.launch
+    name: Policy launch
+    narrative: Move positioning from static decks into the writing decision.
+    desiredAction: Run a draft through the local check.
+    audienceIds:
+      - platform-leader
+    channelIds:
+      - landing-page
+    funnelStageIds:
+      - consideration
+    localeIds:
+      - en
+    sourceIds:
+      - source.positioning
+    mustInclude:
+      - kind: pillar
+        id: pillar.control
+    shouldInclude:
+      - kind: claim
+        id: claim.no-training
+    opportunities:
+      - kind: pillar
+        id: pillar.evidence
+    prohibited:
+      - kind: claim
+        id: claim.rival-speed
+        enforcement: block
+
+rules:
+  - id: rule.training-contradiction
+    name: Customer-content training contradiction
+    type: contradiction
+    description:
+      The approved security position says submitted content is not used for training.
+    enforcement: block
+    triggerSignals:
+      - trains on customer content
+    sourceIds:
+      - source.security
+    suggestion: Use the approved no-training claim with its qualifier.
+  - id: rule.story-disclosure
+    name: Customer story needs permission disclosure
+    type: required_disclosure
+    description: Customer stories need a visible permission statement.
+    enforcement: warn
+    triggerSignals:
+      - customer story
+    requiredSignals:
+      - used with permission
+    sourceIds:
+      - source.positioning
+  - id: rule.launch-drift
+    name: Launch campaign category drift
+    type: campaign_drift
+    description: The launch positions Acme as a policy checker, not a generic AI writer.
+    enforcement: warn
+    triggerSignals:
+      - generic AI writer
+    selectors:
+      campaignIds:
+        - campaign.launch
+    sourceIds:
+      - source.positioning
+    suggestion: Describe the policy check instead of generic generation.

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "commands": [
+    {
+      "id": "positioning-bridge-verify",
+      "category": "verification",
+      "executable": "npm",
+      "args": ["run", "verify"],
+      "timeout_seconds": 600,
+      "max_output_bytes": 2097152,
+      "allowed_exit_codes": [0],
+      "required": true,
+      "shell": false,
+      "artifacts": [
+        {
+          "path": "coverage/coverage-summary.json",
+          "format": "json",
+          "required": true,
+          "max_bytes": 1048576
+        },
+        {
+          "path": "build/dependency-graph.json",
+          "format": "json",
+          "required": true,
+          "max_bytes": 1048576
+        }
+      ]
+    }
+  ]
+}

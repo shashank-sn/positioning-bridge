@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "exclude": ["dist/**", "build/**", "tests/**", "scripts/**"],
+  "allow_cycles": false,
+  "components": [
+    {
+      "id": "domain",
+      "paths": ["src/domain/**"],
+      "public": ["src/domain/index.ts"]
+    },
+    {
+      "id": "application",
+      "paths": ["src/application/**"],
+      "may_depend_on": ["domain"],
+      "public": ["src/application/index.ts"]
+    },
+    {
+      "id": "config",
+      "paths": ["src/config/**"],
+      "may_depend_on": ["domain"],
+      "public": ["src/config/index.ts"]
+    },
+    {
+      "id": "mcp",
+      "paths": ["src/mcp/**"],
+      "may_depend_on": ["application", "domain"],
+      "public": ["src/mcp/index.ts"]
+    },
+    {
+      "id": "cli",
+      "paths": ["src/cli/**"],
+      "may_depend_on": ["application", "config", "domain", "mcp"]
+    },
+    {
+      "id": "package-api",
+      "paths": ["src/index.ts"],
+      "may_depend_on": ["application", "config", "domain"]
+    }
+  ],
+  "exceptions": []
+}

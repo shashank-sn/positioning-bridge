@@ -1,0 +1,37 @@
+name: feature request
+description: propose one bounded positioning-policy behavior
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: actor
+    attributes:
+      label: actor and failure
+      description:
+        Who is blocked, and what concrete draft or policy decision fails today?
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: desired product contract
+      description: State the input, expected decision, finding, and evidence boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: non-goals
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: boundary check
+      options:
+        - label:
+            This does not silently add network access, policy mutation, or publication.
+          required: true
+        - label: This keeps deterministic and model-assisted evidence separate.
+          required: true

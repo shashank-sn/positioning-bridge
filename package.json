@@ -4,7 +4,15 @@
   "description": "Evidence-backed positioning policy checks for content workflows, CLI, and MCP.",
   "type": "module",
   "license": "MIT",
-  "author": "Positioning Bridge contributors",
+  "author": "Shashank SN",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shashank-sn/positioning-bridge.git"
+  },
+  "homepage": "https://github.com/shashank-sn/positioning-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/shashank-sn/positioning-bridge/issues"
+  },
   "keywords": [
     "positioning",
     "messaging",
@@ -14,8 +22,10 @@
     "marketing"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "bin": {
     "positioning-bridge": "./dist/cli/main.js"
   },
@@ -33,9 +43,17 @@
   "files": [
     "dist",
     "schemas",
+    "docs",
+    "examples",
+    "config/architecture.policy.json",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
+    "SECURITY.md",
+    "SUPPORT.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

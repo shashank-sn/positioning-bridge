@@ -4,9 +4,12 @@ import type { PositioningService } from "../application/index.js";
 import type { ContentContext } from "../domain/index.js";
 import {
   CheckContentInputSchema,
+  CheckContentOutputSchema,
+  CreateBriefOutputSchema,
   ExplainItemInputSchema,
+  ExplainItemOutputSchema,
   GetContextInputSchema,
-  ToolOutputSchema,
+  GetContextOutputSchema,
 } from "./schemas.js";
 import { toolResult } from "./result.js";
 
@@ -50,7 +53,7 @@ export function createMcpServer(service: PositioningService): McpServer {
       description:
         "Return the pillars, claims, competitors, campaign, rules, and requirements that apply to one explicit content context.",
       inputSchema: GetContextInputSchema,
-      outputSchema: ToolOutputSchema,
+      outputSchema: GetContextOutputSchema,
       annotations: READ_ONLY_ANNOTATIONS,
     },
     ({ context }) => toolResult(service.getContext(toContentContext(context))),
@@ -63,7 +66,7 @@ export function createMcpServer(service: PositioningService): McpServer {
       description:
         "Return a bounded pre-draft brief with mandatory, recommended, optional, approved, and prohibited messages for one context.",
       inputSchema: GetContextInputSchema,
-      outputSchema: ToolOutputSchema,
+      outputSchema: CreateBriefOutputSchema,
       annotations: READ_ONLY_ANNOTATIONS,
     },
     ({ context }) => toolResult(service.createBrief(toContentContext(context))),
@@ -76,7 +79,7 @@ export function createMcpServer(service: PositioningService): McpServer {
       description:
         "Check a draft for explicit contradictions, missing messages, unsupported claims, stale evidence, disclosures, campaign drift, and positioning opportunities.",
       inputSchema: CheckContentInputSchema,
-      outputSchema: ToolOutputSchema,
+      outputSchema: CheckContentOutputSchema,
       annotations: READ_ONLY_ANNOTATIONS,
     },
     async ({ content, context, semantic }) =>
@@ -94,12 +97,12 @@ export function createMcpServer(service: PositioningService): McpServer {
     {
       title: "Explain a positioning item",
       description:
-        "Resolve a stable policy ID to its complete item and current source evidence.",
+        "Resolve a stable policy ID or emitted finding ID to its complete item, applicability, repair guidance, and current source evidence.",
       inputSchema: ExplainItemInputSchema,
-      outputSchema: ToolOutputSchema,
+      outputSchema: ExplainItemOutputSchema,
       annotations: READ_ONLY_ANNOTATIONS,
     },
-    ({ id }) => toolResult(service.explainItem(id)),
+    ({ id, context }) => toolResult(service.explainItem(id, toContentContext(context))),
   );
 
   return server;

@@ -54,6 +54,11 @@ export interface PositioningPillar {
   readonly requirement?: MessageRequirement;
 }
 
+export interface ClaimQualifier {
+  readonly statement: string;
+  readonly signals: readonly string[];
+}
+
 export interface PositioningClaim {
   readonly id: string;
   readonly name: string;
@@ -64,7 +69,7 @@ export interface PositioningClaim {
   readonly signals: readonly string[];
   readonly sourceIds: readonly string[];
   readonly competitorId?: string;
-  readonly qualifiers?: readonly string[];
+  readonly qualifiers?: readonly ClaimQualifier[];
   readonly expiresAt?: string;
   readonly requirement?: MessageRequirement;
 }
@@ -74,6 +79,7 @@ export interface Competitor {
   readonly name: string;
   readonly category: string;
   readonly aliases: readonly string[];
+  readonly unapprovedComparisonEnforcement: Enforcement;
   readonly notes?: string;
   readonly sourceIds: readonly string[];
 }
@@ -142,6 +148,25 @@ export interface ContentContext {
 
 export type PositioningItemKind =
   "source" | "pillar" | "claim" | "competitor" | "campaign" | "rule";
+
+export type ApplicablePolicyKind = Exclude<PositioningItemKind, "source">;
+export type ApplicabilityBasis =
+  | "global"
+  | "selector_match"
+  | "campaign_reference"
+  | "claim_reference"
+  | "active_campaign";
+
+export interface ApplicabilityReason {
+  readonly basis: ApplicabilityBasis;
+  readonly detail: string;
+}
+
+export interface ApplicablePolicy {
+  readonly policyId: string;
+  readonly kind: ApplicablePolicyKind;
+  readonly reasons: readonly ApplicabilityReason[];
+}
 
 export interface TextLocation {
   readonly start: number;
@@ -212,6 +237,7 @@ export interface ContentDecision {
   };
   readonly context: ContentContext;
   readonly capabilities: CapabilityStatus;
+  readonly applicablePolicies: readonly ApplicablePolicy[];
   readonly appliedPolicyIds: readonly string[];
   readonly coverage: readonly MessageCoverage[];
   readonly findings: readonly Finding[];
@@ -228,6 +254,7 @@ export interface ResolvedPositioningContext {
   readonly rules: readonly PositioningRule[];
   readonly requirements: readonly MessageCoverage[];
   readonly sourceIds: readonly string[];
+  readonly applicablePolicies: readonly ApplicablePolicy[];
   readonly appliedPolicyIds: readonly string[];
 }
 
@@ -246,6 +273,7 @@ export interface ContentBrief {
   readonly opportunities: readonly BriefMessage[];
   readonly approvedClaims: readonly BriefClaim[];
   readonly avoid: readonly BriefRule[];
+  readonly disclosures: readonly BriefRule[];
   readonly sourceIds: readonly string[];
 }
 
@@ -260,7 +288,7 @@ export interface BriefMessage {
 export interface BriefClaim {
   readonly id: string;
   readonly statement: string;
-  readonly qualifiers: readonly string[];
+  readonly qualifiers: readonly ClaimQualifier[];
   readonly competitorId?: string;
   readonly sourceIds: readonly string[];
 }
@@ -268,12 +296,16 @@ export interface BriefClaim {
 export interface BriefRule {
   readonly id: string;
   readonly type: RuleType | "prohibited_claim" | "campaign_prohibited_message";
+  readonly enforcement: Enforcement;
   readonly description: string;
+  readonly triggerSignals: readonly string[];
+  readonly requiredSignals?: readonly string[];
   readonly suggestion?: string;
   readonly sourceIds: readonly string[];
 }
 
 export interface ExplainedItem {
+  readonly requestedId: string;
   readonly kind: PositioningItemKind;
   readonly id: string;
   readonly item:
@@ -284,4 +316,11 @@ export interface ExplainedItem {
     | Campaign
     | PositioningRule;
   readonly evidence: readonly FindingEvidence[];
+  readonly finding?: {
+    readonly type: FindingType;
+    readonly certainty: FindingCertainty;
+    readonly locationStart?: number;
+    readonly applicability?: ApplicablePolicy;
+    readonly repairGuidance: string;
+  };
 }

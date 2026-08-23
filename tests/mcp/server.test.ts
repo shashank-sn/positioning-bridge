@@ -55,6 +55,18 @@ describe("Positioning Bridge MCP server", () => {
       });
       expect(tool.outputSchema).toBeDefined();
     }
+    const fieldsByTool = new Map(
+      tools.map((tool) => {
+        const output = tool.outputSchema as {
+          properties?: { result?: { properties?: Record<string, unknown> } };
+        };
+        return [tool.name, Object.keys(output.properties?.result?.properties ?? {})];
+      }),
+    );
+    expect(fieldsByTool.get("check_content")).toContain("decision");
+    expect(fieldsByTool.get("get_positioning_context")).toContain("applicablePolicies");
+    expect(fieldsByTool.get("create_content_brief")).toContain("disclosures");
+    expect(fieldsByTool.get("explain_positioning_item")).toContain("requestedId");
   });
 
   it("returns output-schema-valid structured content and a text fallback", async () => {
@@ -106,7 +118,7 @@ describe("Positioning Bridge MCP server", () => {
     });
     const explanation = await client.callTool({
       name: "explain_positioning_item",
-      arguments: { id: "claim.no-training" },
+      arguments: { id: "claim.no-training", context: considerationContext },
     });
 
     expect(
@@ -119,6 +131,42 @@ describe("Positioning Bridge MCP server", () => {
     expect(
       (explanation.structuredContent as { result: { kind: string } }).result.kind,
     ).toBe("claim");
+  });
+
+  it("explains a finding ID emitted by check_content", async () => {
+    const { client } = await connect();
+    const checked = await client.callTool({
+      name: "check_content",
+      arguments: {
+        content: "It trains on customer content.",
+        context: considerationContext,
+        semantic: "disabled",
+      },
+    });
+    const result = (
+      checked.structuredContent as {
+        result: { findings: { id: string; policyId: string }[] };
+      }
+    ).result;
+    const finding = result.findings.find(
+      ({ policyId }) => policyId === "rule.training-contradiction",
+    );
+    if (finding === undefined) throw new Error("MCP check did not emit the finding");
+    const explained = await client.callTool({
+      name: "explain_positioning_item",
+      arguments: { id: finding.id, context: considerationContext },
+    });
+
+    expect(explained.structuredContent).toMatchObject({
+      result: {
+        requestedId: finding.id,
+        id: "rule.training-contradiction",
+        finding: {
+          type: "contradiction",
+          applicability: { policyId: "rule.training-contradiction" },
+        },
+      },
+    });
   });
 
   it("preserves an explicit campaign in MCP context conversion", async () => {

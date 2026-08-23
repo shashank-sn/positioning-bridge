@@ -1,40 +1,43 @@
 # Positioning Bridge
 
+[![ci](https://github.com/shashank-sn/positioning-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/shashank-sn/positioning-bridge/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Positioning Bridge checks whether a draft carries the right company messages for its
-actual audience, channel, funnel stage, locale, and campaign.
+audience, channel, funnel stage, locale, and campaign.
 
-the company keeps one versioned positioning pack. writers use the same policy through a
-CLI, MCP host, or TypeScript library. every finding points to the exact pillar, claim,
-rule, campaign, and source that caused it.
+a company keeps one versioned positioning pack. writers use the same policy through a
+CLI, MCP host, or TypeScript library. every result names the exact pillar, claim, rule,
+campaign, competitor, and source that caused it.
 
-Positioning Bridge complements [Hold Your Voice](docs/hyv-integration.md). it checks
-message policy and evidence. HYV checks voice and linguistic patterns. neither result is
-proof that a claim is true or that a human should publish the draft.
+## what it checks
 
-## what it catches
+| company decision                                         | draft result                            |
+| -------------------------------------------------------- | --------------------------------------- |
+| required positioning pillar is absent                    | `missing_message`                       |
+| draft conflicts with an explicit policy rule             | `contradiction`                         |
+| claim is prohibited, unapproved, unqualified, or expired | `unsupported_claim` or `stale_evidence` |
+| named competitor comparison has no registered claim      | `unsupported_claim`                     |
+| disclosure is missing after its trigger                  | `required_disclosure`                   |
+| draft breaks the active campaign narrative               | `campaign_drift`                        |
+| optional message could make the position clearer         | `positioning_opportunity`               |
 
-- required positioning messages missing from a specific content context;
-- explicit contradictions against approved company policy;
-- prohibited or still-unapproved claims;
-- competitive comparisons without an active approved claim;
-- expired, draft, or deprecated proof;
-- required disclosures and campaign-specific drift;
-- optional places where a message can become stronger without bloating the draft.
+the decision is `pass`, `needs_revision`, or `blocked`. there is no composite brand
+score. deterministic and model-assisted evidence stay labeled separately.
 
-there is no composite brand score. a result is `pass`, `needs_revision`, or `blocked`,
-with typed findings underneath it.
+## run the example
 
-## quick start
-
-requirements: Node.js 20 or newer and npm.
+requirements: Node.js 22 or newer and npm.
 
 ```bash
-npm install
+git clone https://github.com/shashank-sn/positioning-bridge.git
+cd positioning-bridge
+npm ci
 npm run build
 node dist/cli/main.js validate --pack examples/acme/positioning.yaml
 ```
 
-check the passing example:
+check the passing fictional draft:
 
 ```bash
 node dist/cli/main.js check \
@@ -46,18 +49,33 @@ node dist/cli/main.js check \
   --campaign campaign.launch
 ```
 
-the command exits `0` for `pass`, `1` for `needs_revision` or `blocked`, and `2` for a
-usage or configuration error. use `--json` for automation.
+check from stdin and keep the structured result:
 
-create a company starter pack without overwriting an existing file:
+```bash
+printf '%s\n' 'Acme trains on customer content.' | node dist/cli/main.js check \
+  --pack examples/acme/positioning.yaml \
+  --stdin \
+  --audience platform-leader \
+  --channel landing-page \
+  --funnel-stage consideration \
+  --json
+```
+
+the command exits `0` for `pass`, `1` for `needs_revision` or `blocked`, and `2` for a
+usage or configuration error. omitted locale uses the pack's `defaultLocale`.
+
+create a starter pack without overwriting an existing file:
 
 ```bash
 node dist/cli/main.js init --output company-positioning.yaml
 ```
 
+the project is open source on GitHub under the MIT license. `positioning-bridge` has not
+been published to npm yet, so use the clone workflow above for `0.1.0`.
+
 ## connect an MCP host
 
-build the package, then give the host an absolute pack path:
+build the repository, then give the host the absolute pack and executable paths:
 
 ```json
 {
@@ -77,36 +95,54 @@ build the package, then give the host an absolute pack path:
 
 the server loads one pack at startup and exposes four read-only tools:
 
-- `get_positioning_context`
-- `create_content_brief`
-- `check_content`
-- `explain_positioning_item`
+- `get_positioning_context` returns applicable policy plus structured reasons;
+- `create_content_brief` returns required, approved, prohibited, and disclosure policy;
+- `check_content` returns the decision, coverage, capabilities, and typed findings;
+- `explain_positioning_item` accepts a policy or emitted finding ID plus context.
 
-restart the MCP process after changing the pack. see [the MCP guide](docs/mcp.md) for
-tool contracts and current host setup notes.
+restart the process after changing the pack. the [MCP guide](docs/mcp.md) contains the
+tool inputs, outputs, Codex command, and writer sequence.
 
-## pack model
+## positioning pack
 
-a pack contains context catalogs, source records, pillars, claims, competitors,
-campaigns, and deterministic rules. IDs are stable and references are checked before the
-server starts.
+a pack contains:
 
-the complete reference lives in [docs/positioning-pack.md](docs/positioning-pack.md).
-editors can use the generated [JSON Schema](schemas/positioning-pack.schema.json). the
-[fictional Acme pack](examples/acme/positioning.yaml) exercises every first-release
-concept.
+- context catalogs for audiences, channels, funnel stages, and locales;
+- evidence sources with approval, visibility, verification, and expiry state;
+- pillars and approved, review-required, or prohibited claims;
+- named competitors and enforcement for unregistered comparisons;
+- campaign narratives, desired actions, required messages, and exclusions;
+- deterministic contradiction, disclosure, language, and campaign rules.
 
-## certainty boundary
+IDs are stable and every reference is validated before the server starts. see the
+[pack reference](docs/positioning-pack.md), generated
+[JSON Schema](schemas/positioning-pack.schema.json), and complete fictional
+[Acme pack](examples/acme/positioning.yaml).
 
-confirmed contradictions come from explicit pack rules. an optional `SemanticReviewer`
-adapter can find paraphrases and contextual conflicts, but those findings stay labeled
-`model_assisted` and cannot block by themselves.
+## certainty and safety boundary
 
-the repository ships the semantic adapter interface, not a remote model provider.
-default runtime behavior performs no network request and stores no submitted draft. if
-no adapter is configured, every result says semantic review was `not_run`.
+confirmed contradictions come from explicit deterministic rules. an optional
+`SemanticReviewer` can report paraphrases and contextual conflicts. those findings stay
+`model_assisted`, default to human review, and cannot block by themselves.
 
-## library use
+default runtime behavior:
+
+- makes no network request;
+- stores no submitted draft;
+- loads only the configured pack path;
+- caps pack and content size;
+- exposes no policy mutation or publishing tool.
+
+Positioning Bridge checks supplied policy and supplied evidence state. it does not prove
+an external fact, legal approval, customer permission, or source authenticity.
+
+## use with Hold Your Voice
+
+Positioning Bridge and [Hold Your Voice](docs/hyv-integration.md) remain separate gates.
+Positioning Bridge checks message policy and evidence. HYV checks voice and linguistic
+patterns. neither package imports the other, and neither result is publication approval.
+
+## TypeScript library
 
 ```ts
 import { PositioningService, loadPack } from "positioning-bridge";
@@ -124,22 +160,10 @@ const result = await service.checkContent({
 });
 ```
 
-MCP construction is available from `positioning-bridge/mcp`.
+MCP construction is exported from `positioning-bridge/mcp`. the JSON Schema is exported
+from `positioning-bridge/schema`.
 
-## repository map
-
-- `src/domain`: pure policy and decision logic;
-- `src/application`: use cases and the semantic-review port;
-- `src/config`: YAML/JSON loading and validation;
-- `src/mcp`: MCP v2 tools and stdio serving;
-- `src/cli`: commands, rendering, and process composition;
-- `docs/research`: dated market and standards research;
-- `docs/plans`: requirements and implementation contract.
-
-the dependency direction is executable in
-[`config/architecture.policy.json`](config/architecture.policy.json).
-
-## development
+## development and verification
 
 ```bash
 npm ci
@@ -147,22 +171,27 @@ npm run verify
 npm run smoke:package
 ```
 
-`npm run verify` runs formatting, linting, strict type checks, coverage, schema drift,
-the import-graph architecture policy, documentation links, and a production build.
-`npm run smoke:package` packs the current version, audits its file allowlist, installs
-it with a clean temporary cache, and checks the installed binary, library export, and
-MCP stdio handshake.
+`npm run verify` checks formatting, linting, strict types, tests and coverage, schema
+drift, architecture direction, documentation links, production build, and a live stdio
+handshake. `npm run smoke:package` packs the exact version, checks its allowlist and
+Markdown links, installs it in a clean temporary project, then checks its binary,
+library export, example validation, and MCP handshake.
 
-read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
-[GOVERNANCE.md](GOVERNANCE.md) before opening a change.
+the component boundaries live in [architecture.md](docs/architecture.md) and the
+executable [architecture policy](config/architecture.policy.json). release operations
+live in [operations.md](docs/operations.md).
 
-## status
+## project status
 
-`0.1.0` is a complete local-first foundation. it does not include a hosted control
-plane, web UI, remote model provider, CMS crawler, publication workflow, or performance
-analytics. those boundaries are deliberate and recorded in
-[ADR 0001](docs/adr/0001-domain-policy-core.md).
+`0.1.0` is the local-first foundation. it does not include a hosted control plane, web
+UI, remote model provider, CMS crawler, publication workflow, or performance analytics.
+those boundaries are recorded in [ADR 0001](docs/adr/0001-domain-policy-core.md).
 
-## license
+read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a change. use
+[GitHub Issues](https://github.com/shashank-sn/positioning-bridge/issues) for
+reproducible bugs and bounded feature requests. use
+[GitHub Discussions](https://github.com/shashank-sn/positioning-bridge/discussions) for
+setup and design questions. report vulnerabilities through the private route in
+[SECURITY.md](SECURITY.md).
 
-[MIT](LICENSE)
+MIT licensed. see [LICENSE](LICENSE).

@@ -64,8 +64,9 @@ approved message space.
 input: `{ context }`.
 
 returns `mustCarry`, `shouldCarry`, `opportunities`, current approved claims, prohibited
-claims, campaign-prohibited messages, deterministic rules, the selected campaign
-narrative, and source IDs. it does not generate the draft.
+claims, campaign-prohibited messages, required disclosures, enforcement, trigger
+signals, the selected campaign narrative, and source IDs. it does not generate the
+draft.
 
 ### `check_content`
 
@@ -91,14 +92,29 @@ returns the domain decision, capabilities, coverage, and findings. `semantic` ca
 
 ### `explain_positioning_item`
 
-input: `{ "id": "claim.no-training" }`.
+input:
 
-returns the complete policy item and current evidence state. IDs are unique across
-sources, pillars, claims, competitors, campaigns, and rules.
+```json
+{
+  "id": "contradiction:rule.training-contradiction:42",
+  "context": {
+    "audienceId": "platform-leader",
+    "channelId": "landing-page",
+    "funnelStageId": "consideration",
+    "localeId": "en"
+  }
+}
+```
+
+`id` can be a policy ID or an ID emitted in `check_content.findings`. the result returns
+the underlying policy, current evidence state, applicability reason, finding certainty,
+location offset, and bounded repair guidance. policy IDs are unique across sources,
+pillars, claims, competitors, campaigns, and rules.
 
 ## output compatibility
 
-every tool advertises an output schema and returns the same JSON object in two places:
+every tool advertises its complete result schema and returns the same JSON object in two
+places:
 
 - `structuredContent.result` for typed clients;
 - a serialized JSON text content block for clients that still rely on text.

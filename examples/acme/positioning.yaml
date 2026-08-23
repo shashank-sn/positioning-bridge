@@ -95,7 +95,9 @@ claims:
     sourceIds:
       - source.security
     qualifiers:
-      - Applies to the fictional standard hosted product.
+      - statement: Applies to the fictional standard hosted product.
+        signals:
+          - fictional standard hosted product
     requirement:
       level: should
       selectors:
@@ -132,6 +134,7 @@ competitors:
     aliases:
       - RivalSuite
       - Rival Suite
+    unapprovedComparisonEnforcement: block
     sourceIds:
       - source.competitor
 

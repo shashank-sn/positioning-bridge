@@ -2,7 +2,7 @@
 
 ## runtime contract
 
-- Node.js 20 or newer;
+- Node.js 22 or newer;
 - one YAML or JSON pack per process;
 - stdio MCP transport;
 - 1 MiB pack limit;
@@ -60,8 +60,8 @@ the draft.
 6. publish to npm only after package ownership, provenance, and the GitHub remote are
    configured by a maintainer.
 
-the local repository does not assume a GitHub owner, npm owner, support address, or
-release credential.
+the GitHub repository owner and release administrator is `@shashank-sn`. npm ownership
+and release credentials remain unconfigured until a separate package publication.
 
 ## semantic adapters
 

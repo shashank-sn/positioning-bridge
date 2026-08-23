@@ -1,5 +1,13 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -9,10 +17,13 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const execute = promisify(execFile);
 const root = process.cwd();
+const sourcePackageJson = JSON.parse(
+  await readFile(path.join(root, "package.json"), "utf8"),
+);
+const expectedVersion = String(sourcePackageJson.version);
 let input = process.argv[2];
 if (input === undefined) {
-  const metadata = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
-  input = `${String(metadata.name).replace(/^@/u, "").replace("/", "-")}-${String(metadata.version)}.tgz`;
+  input = `${String(sourcePackageJson.name).replace(/^@/u, "").replace("/", "-")}-${expectedVersion}.tgz`;
   const packCache = await mkdtemp(
     path.join(tmpdir(), "positioning-bridge-pack-cache-"),
   );
@@ -33,6 +44,15 @@ const required = new Set([
   "package/README.md",
   "package/LICENSE",
   "package/CHANGELOG.md",
+  "package/CODE_OF_CONDUCT.md",
+  "package/CONTRIBUTING.md",
+  "package/GOVERNANCE.md",
+  "package/SECURITY.md",
+  "package/SUPPORT.md",
+  "package/config/architecture.policy.json",
+  "package/docs/mcp.md",
+  "package/docs/positioning-pack.md",
+  "package/examples/acme/positioning.yaml",
   "package/dist/cli/main.js",
   "package/dist/index.js",
   "package/schemas/positioning-pack.schema.json",
@@ -43,8 +63,16 @@ for (const file of files) {
     file === "package/README.md" ||
     file === "package/LICENSE" ||
     file === "package/CHANGELOG.md" ||
+    file === "package/CODE_OF_CONDUCT.md" ||
+    file === "package/CONTRIBUTING.md" ||
+    file === "package/GOVERNANCE.md" ||
+    file === "package/SECURITY.md" ||
+    file === "package/SUPPORT.md" ||
+    file === "package/config/architecture.policy.json" ||
     file.startsWith("package/dist/") ||
-    file.startsWith("package/schemas/")
+    file.startsWith("package/schemas/") ||
+    file.startsWith("package/docs/") ||
+    file.startsWith("package/examples/")
   ) {
     continue;
   }
@@ -53,6 +81,62 @@ for (const file of files) {
 for (const file of required) {
   if (!files.includes(file))
     throw new Error(`required package file is missing: ${file}`);
+}
+
+async function markdownFiles(directory) {
+  const output = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isSymbolicLink()) {
+      throw new Error(`unexpected symlink in package: ${entryPath}`);
+    }
+    if (entry.isDirectory()) output.push(...(await markdownFiles(entryPath)));
+    else if (entry.isFile() && entry.name.endsWith(".md")) output.push(entryPath);
+  }
+  return output;
+}
+
+const extractRoot = await mkdtemp(path.join(tmpdir(), "positioning-bridge-extract-"));
+try {
+  await execute("tar", ["-xzf", tarball, "-C", extractRoot], { cwd: root });
+  const packageRoot = path.join(extractRoot, "package");
+  for (const markdownPath of await markdownFiles(packageRoot)) {
+    const markdown = await readFile(markdownPath, "utf8");
+    for (const match of markdown.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)) {
+      const target = match[1]?.split("#", 1)[0];
+      if (
+        target === undefined ||
+        target.length === 0 ||
+        /^(?:https?:|mailto:)/u.test(target)
+      ) {
+        continue;
+      }
+      const resolved = path.resolve(path.dirname(markdownPath), decodeURI(target));
+      if (!resolved.startsWith(`${packageRoot}${path.sep}`)) {
+        throw new Error(`packaged Markdown link escapes the package: ${target}`);
+      }
+      try {
+        await access(resolved);
+      } catch {
+        throw new Error(
+          `packaged Markdown link is missing: ${path.relative(packageRoot, markdownPath)} -> ${target}`,
+        );
+      }
+    }
+  }
+} finally {
+  await rm(extractRoot, { recursive: true, force: true });
+}
+
+if (
+  sourcePackageJson.repository?.url !==
+    "git+https://github.com/shashank-sn/positioning-bridge.git" ||
+  sourcePackageJson.homepage !==
+    "https://github.com/shashank-sn/positioning-bridge#readme" ||
+  sourcePackageJson.bugs?.url !==
+    "https://github.com/shashank-sn/positioning-bridge/issues"
+) {
+  throw new Error("package repository metadata is incomplete");
 }
 
 const installRoot = await mkdtemp(path.join(tmpdir(), "positioning-bridge-install-"));
@@ -78,7 +162,10 @@ try {
 
   const binary = path.join(installRoot, "node_modules", ".bin", "positioning-bridge");
   const help = await execute(binary, ["--help"], { cwd: installRoot });
-  if (!help.stdout.includes("positioning-bridge 0.1.0") || help.stderr !== "") {
+  if (
+    !help.stdout.includes(`positioning-bridge ${expectedVersion}`) ||
+    help.stderr !== ""
+  ) {
     throw new Error("installed package binary failed its help check");
   }
   const validation = await execute(
@@ -96,7 +183,7 @@ try {
       "utf8",
     ),
   );
-  if (packageJson.version !== "0.1.0") {
+  if (packageJson.version !== expectedVersion) {
     throw new Error(
       `installed unexpected package version ${String(packageJson.version)}`,
     );

@@ -115,7 +115,9 @@ claims:
     sourceIds:
       - source.security-page
     qualifiers:
-      - Applies to the standard hosted product.
+      - statement: Applies to the standard hosted product.
+        signals:
+          - standard hosted product
 ```
 
 `kind` is `fact`, `comparison`, `superlative`, `customer`, or `roadmap`. `status` is
@@ -123,8 +125,16 @@ claims:
 `suggest`.
 
 comparison claims need `competitorId`. expiry can be set on the claim and its sources.
-using an approved claim with no active approved evidence produces a stale-evidence
-finding.
+each qualifier is an approved statement plus literal signals that must appear whenever
+the claim appears. using an approved claim without its qualifier produces an
+unsupported-claim finding at the claim's configured enforcement. using an approved claim
+with no active approved evidence produces a stale-evidence finding.
+
+briefs recommend only messages with active approved support. if a required pillar or
+claim is expired or all of its sources are inactive, the brief omits it and the content
+check returns `stale_evidence` instead of telling the writer to add it. an absent
+`should` or `opportunity` message remains suggestive even when the claim's use
+enforcement is stricter.
 
 ## competitors
 
@@ -139,13 +149,16 @@ competitors:
     aliases:
       - manual review
       - review spreadsheet
+    unapprovedComparisonEnforcement: block
     sourceIds:
       - source.competitive-review
 ```
 
 approved differentiation lives in claims with `kind: comparison` and the matching
 `competitorId`. that keeps the wording, proof, qualifier, status, and expiry in one
-place.
+place. `unapprovedComparisonEnforcement` controls the result when bounded comparison
+language such as `than <alias>`, `versus <alias>`, or `compared with <alias>` does not
+overlap a configured claim signal.
 
 ## campaigns
 
@@ -174,8 +187,11 @@ campaigns:
 ```
 
 campaign requirements can strengthen a general requirement. they cannot weaken a company
-prohibition. `prohibited` entries make an existing pillar or claim invalid only inside
-that campaign. each entry chooses `block`, `warn`, or `suggest`, and appears in the
+prohibition. `mustInclude`, `shouldInclude`, and `opportunities` may reference only
+approved claims; a campaign cannot promote a review-required or prohibited claim.
+`prohibited` entries make an existing pillar or claim invalid only inside that campaign.
+they also suppress any company-level carry requirement for that message while the
+campaign is active. each entry chooses `block`, `warn`, or `suggest`, and appears in the
 pre-draft brief before it can reach a content check.
 
 ## deterministic rules

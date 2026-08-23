@@ -1,5 +1,6 @@
 import type {
   Campaign,
+  ClaimStatus,
   MessageReference,
   PositioningPack,
   Selector,
@@ -79,6 +80,7 @@ function checkCampaign(
   catalogs: Readonly<Record<CatalogKey, ReadonlySet<string>>>,
   pillars: ReadonlySet<string>,
   claims: ReadonlySet<string>,
+  claimStatuses: ReadonlyMap<string, ClaimStatus>,
   sources: ReadonlySet<string>,
   issues: PackIssue[],
 ): void {
@@ -103,6 +105,15 @@ function checkCampaign(
         claims,
         issues,
       );
+      if (reference.kind === "claim") {
+        const status = claimStatuses.get(reference.id);
+        if (status !== undefined && status !== "approved") {
+          issues.push({
+            path: `${path}.${group}.${referenceIndex}`,
+            message: `campaign messages can only carry approved claims; '${reference.id}' is ${status}`,
+          });
+        }
+      }
     });
     const keys = campaign[group].map(
       (reference) => `${reference.kind}:${reference.id}`,
@@ -158,6 +169,7 @@ export function validatePackReferences(pack: PositioningPack): readonly PackIssu
   const sources = new Set(pack.sources.map(({ id }) => id));
   const pillars = new Set(pack.pillars.map(({ id }) => id));
   const claims = new Set(pack.claims.map(({ id }) => id));
+  const claimStatuses = new Map(pack.claims.map(({ id, status }) => [id, status]));
   const competitors = new Set(pack.competitors.map(({ id }) => id));
   const campaigns = new Set(pack.campaigns.map(({ id }) => id));
 
@@ -232,6 +244,12 @@ export function validatePackReferences(pack: PositioningPack): readonly PackIssu
         message: "approved comparison and superlative claims need a qualifier",
       });
     }
+    if (claim.status !== "approved" && claim.requirement !== undefined) {
+      issues.push({
+        path: `claims.${index}.requirement`,
+        message: "only approved claims can be required messages",
+      });
+    }
     checkSelector(
       claim.requirement?.selectors,
       `claims.${index}.requirement.selectors`,
@@ -243,7 +261,16 @@ export function validatePackReferences(pack: PositioningPack): readonly PackIssu
     checkIds(competitor.sourceIds, sources, `competitors.${index}.sourceIds`, issues);
   });
   pack.campaigns.forEach((campaign, index) => {
-    checkCampaign(campaign, index, catalogs, pillars, claims, sources, issues);
+    checkCampaign(
+      campaign,
+      index,
+      catalogs,
+      pillars,
+      claims,
+      claimStatuses,
+      sources,
+      issues,
+    );
   });
   pack.rules.forEach((rule, index) => {
     checkIds(rule.sourceIds, sources, `rules.${index}.sourceIds`, issues);

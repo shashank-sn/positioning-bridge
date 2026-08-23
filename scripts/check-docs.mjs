@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { parseDocument } from "yaml";
 
@@ -17,13 +17,35 @@ const required = [
   "docs/mcp.md",
   "docs/hyv-integration.md",
   "docs/operations.md",
+  "docs/testing.md",
   "examples/acme/positioning.yaml",
   ".github/workflows/ci.yml",
   ".github/workflows/dependency-review.yml",
+  ".github/CODEOWNERS",
   ".github/dependabot.yml",
   ".github/release.yml",
 ];
 const errors = [];
+const excludedDirectories = new Set([
+  ".git",
+  "build",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
+
+async function findMarkdownFiles(directory) {
+  const output = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && excludedDirectories.has(entry.name)) continue;
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) output.push(...(await findMarkdownFiles(entryPath)));
+    else if (entry.isFile() && entry.name.endsWith(".md")) {
+      output.push(path.relative(root, entryPath));
+    }
+  }
+  return output;
+}
 
 for (const file of required) {
   try {
@@ -33,7 +55,7 @@ for (const file of required) {
   }
 }
 
-const markdownFiles = required.filter((file) => file.endsWith(".md"));
+const markdownFiles = (await findMarkdownFiles(root)).sort();
 for (const file of markdownFiles) {
   let text;
   try {
@@ -41,7 +63,16 @@ for (const file of markdownFiles) {
   } catch {
     continue;
   }
-  if (/\b(?:TODO|TBD)\b/u.test(text)) errors.push(`${file} contains TODO or TBD`);
+  if (/\b(?:TODO|TBD|FIXME)\b/u.test(text)) {
+    errors.push(`${file} contains an unresolved work marker`);
+  }
+  if (
+    /<repository-url>|(?:after|once) a (?:public )?(?:GitHub )?remote exists/iu.test(
+      text,
+    )
+  ) {
+    errors.push(`${file} contains a pre-remote placeholder`);
+  }
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/gu;
   for (const match of text.matchAll(linkPattern)) {
     const target = match[1]?.split("#", 1)[0];
@@ -73,6 +104,52 @@ for (const file of yamlFiles) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown read error";
     errors.push(`${file} could not be checked: ${message}`);
+  }
+}
+
+for (const [file, fragments] of [
+  [
+    ".github/workflows/ci.yml",
+    [
+      "npm audit --audit-level=moderate",
+      "npm run verify",
+      "npm run smoke:package",
+      "npm run typecheck",
+      "npm test",
+      "npm run build",
+    ],
+  ],
+  [".github/workflows/dependency-review.yml", ["actions/dependency-review-action@"]],
+]) {
+  const text = await readFile(path.join(root, file), "utf8");
+  for (const fragment of fragments) {
+    if (!text.includes(fragment)) {
+      errors.push(`${file} is missing required CI step: ${fragment}`);
+    }
+  }
+  for (const match of text.matchAll(/uses:\s+[^@\s]+@([^\s#]+)/gu)) {
+    if (!/^[0-9a-f]{40}$/u.test(match[1] ?? "")) {
+      errors.push(`${file} has a GitHub Action that is not pinned to a commit SHA`);
+    }
+  }
+}
+
+const packageMetadata = JSON.parse(
+  await readFile(path.join(root, "package.json"), "utf8"),
+);
+const verifyScript = String(packageMetadata.scripts?.verify ?? "");
+for (const command of [
+  "format:check",
+  "lint",
+  "typecheck",
+  "test:coverage",
+  "schema:check",
+  "architecture:check",
+  "docs:check",
+  "smoke:stdio",
+]) {
+  if (!verifyScript.includes(command)) {
+    errors.push(`package.json verify script is missing ${command}`);
   }
 }
 

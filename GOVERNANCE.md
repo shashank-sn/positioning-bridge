@@ -6,6 +6,10 @@ the project starts with a maintainer-led model. maintainers merge changes, cut r
 handle security reports, and protect the product boundaries in
 [the requirements](docs/plans/2026-08-23-positioning-bridge-requirements.md).
 
+repository owner and release administrator:
+[@shashank-sn](https://github.com/shashank-sn). this bootstrap assignment stays in place
+until another maintainer is named here.
+
 ## decisions
 
 - bug fixes follow the existing requirements and tests;
@@ -27,5 +31,6 @@ a maintainer with a personal or commercial conflict must disclose it and avoid b
 sole reviewer. security reports and conduct reports should be handled by someone who is
 not the subject of the report.
 
-this file must name remote repository owners and release administrators before the first
-public release. the local project does not invent those identities.
+repository administration, package publication, and release signing stay with the named
+release administrator. a future ownership change needs a reviewed governance update
+before credentials or release authority move.

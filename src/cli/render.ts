@@ -27,6 +27,17 @@ export function renderDecision(result: ContentDecision): string {
     lines.push(
       `[${finding.severity}] ${finding.type} ${finding.policyId}${location}: ${finding.message}`,
     );
+    lines.push(`  rationale: ${finding.rationale}`);
+    if (finding.evidence.length > 0) {
+      lines.push(
+        `  evidence: ${finding.evidence
+          .map(
+            ({ sourceId, status, active }) =>
+              `${sourceId} (${status}, ${active ? "active" : "inactive"})`,
+          )
+          .join(", ")}`,
+      );
+    }
     if (finding.suggestion !== undefined)
       lines.push(`  suggestion: ${finding.suggestion}`);
   }

@@ -13,7 +13,7 @@ export type CliCommand =
       readonly audienceId: string;
       readonly channelId: string;
       readonly funnelStageId: string;
-      readonly localeId: string;
+      readonly localeId?: string;
       readonly campaignId?: string;
       readonly semantic: "auto" | "disabled";
       readonly format: OutputFormat;
@@ -137,6 +137,7 @@ export function parseArguments(
       throw new CliUsageError("option '--semantic' must be 'auto' or 'disabled'");
     }
     const campaignId = optionalValue(flags, "--campaign");
+    const localeId = optionalValue(flags, "--locale");
     return {
       name: "check",
       pack: value(flags, "--pack", packFallback),
@@ -145,7 +146,7 @@ export function parseArguments(
       audienceId: value(flags, "--audience"),
       channelId: value(flags, "--channel"),
       funnelStageId: value(flags, "--funnel-stage"),
-      localeId: optionalValue(flags, "--locale") ?? "en",
+      ...(localeId === undefined ? {} : { localeId }),
       ...(campaignId === undefined ? {} : { campaignId }),
       semantic,
       format: flags.has("--json") ? "json" : "human",

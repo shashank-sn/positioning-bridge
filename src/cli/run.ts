@@ -97,7 +97,7 @@ export async function runCli(
         audienceId: command.audienceId,
         channelId: command.channelId,
         funnelStageId: command.funnelStageId,
-        localeId: command.localeId,
+        localeId: command.localeId ?? pack.defaultLocale,
         ...campaignContext,
       },
       semantic: command.semantic,

@@ -185,4 +185,40 @@ describe("positioning pack loading", () => {
       message: "approved comparison and superlative claims need a qualifier",
     });
   });
+
+  it("rejects required messages that would approve a non-approved claim", () => {
+    const pack = structuredClone(validPack) as DeepMutable<PositioningPack>;
+    const campaign = pack.campaigns[0];
+    const prohibited = pack.claims.find(({ id }) => id === "claim.only-tool");
+    const reviewRequired = pack.claims.find(({ id }) => id === "claim.rival-speed");
+    if (
+      campaign === undefined ||
+      prohibited === undefined ||
+      reviewRequired === undefined
+    ) {
+      throw new Error("test fixture is missing claim-policy cases");
+    }
+    campaign.mustInclude.push({ kind: "claim", id: prohibited.id });
+    campaign.shouldInclude.push({ kind: "claim", id: reviewRequired.id });
+    prohibited.requirement = { level: "must" };
+
+    expect(validatePackReferences(pack)).toEqual(
+      expect.arrayContaining([
+        {
+          path: "claims.3.requirement",
+          message: "only approved claims can be required messages",
+        },
+        {
+          path: "campaigns.0.mustInclude.1",
+          message:
+            "campaign messages can only carry approved claims; 'claim.only-tool' is prohibited",
+        },
+        {
+          path: "campaigns.0.shouldInclude.1",
+          message:
+            "campaign messages can only carry approved claims; 'claim.rival-speed' is review_required",
+        },
+      ]),
+    );
+  });
 });

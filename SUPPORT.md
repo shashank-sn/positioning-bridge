@@ -5,9 +5,11 @@
 read the [README](README.md), [pack reference](docs/positioning-pack.md), and
 [MCP guide](docs/mcp.md) first.
 
-after a public remote exists, use GitHub Discussions for setup and design questions. use
-issues only for reproducible bugs and bounded feature requests. the initial project does
-not promise paid support, response times, or private implementation consulting.
+use [GitHub Discussions](https://github.com/shashank-sn/positioning-bridge/discussions)
+for setup and design questions. use
+[GitHub Issues](https://github.com/shashank-sn/positioning-bridge/issues) only for
+reproducible bugs and bounded feature requests. the project does not promise paid
+support, response times, or private implementation consulting.
 
 ## useful bug report
 

@@ -55,8 +55,8 @@ and the missing capability remains visible.
 
 actor: writer or reviewer.
 
-outcome: resolve a finding ID to the rule, source records, applicability, and bounded
-repair guidance used to create it.
+outcome: resolve a finding ID to the policy item, source records, applicability, and
+bounded repair guidance used to create it.
 
 failure behavior: an unknown finding or policy ID returns a typed error.
 
@@ -163,9 +163,10 @@ the library does not persist content decisions in the first release.
 
 ## semantic review boundary
 
-`SemanticReviewer` receives the draft, resolved policy statements, and deterministic
-result. an adapter may return model-assisted candidate findings. the application layer
-validates their policy references, content spans, and certainty before merging them.
+`SemanticReviewer` receives the draft, content context, and resolved positioning policy.
+an adapter may return model-assisted candidate findings. the application layer validates
+their type, text, policy reference, content span, confidence, and count before merging
+them with the deterministic result.
 
 the repository ships the port and contract tests, not a remote provider. this preserves
 local-only default behavior and avoids selecting a company model or sending strategy
@@ -177,8 +178,8 @@ first-release tools:
 
 - `get_positioning_context`: return applicable policy for a content context;
 - `check_content`: return a complete content decision;
-- `explain_positioning_item`: explain a finding, rule, pillar, claim, competitor,
-  campaign, or source;
+- `explain_positioning_item`: explain an emitted finding, rule, pillar, claim,
+  competitor, campaign, or source;
 - `create_content_brief`: return a compact pre-draft brief.
 
 all tools are read-only and closed-world. the configured pack is loaded once at startup.
@@ -189,9 +190,9 @@ policy revisions.
 
 - reject packs and drafts above configured byte limits;
 - do not interpret source text or draft text as instructions;
-- compile regular expressions during pack loading and cap pattern length;
-- avoid catastrophic regular expressions through a restricted signal format in the first
-  release;
+- cap signal count and length during pack loading;
+- build match expressions during evaluation only from escaped literal signals plus fixed
+  whitespace and word-boundary syntax;
 - never accept a pack path through an MCP tool call;
 - resolve CLI paths explicitly and report the selected path;
 - make network access impossible in the default composition root;

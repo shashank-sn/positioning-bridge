@@ -70,6 +70,13 @@ const PillarSchema = z
   })
   .strict();
 
+const ClaimQualifierSchema = z
+  .object({
+    statement: shortText,
+    signals: signalList,
+  })
+  .strict();
+
 const ClaimSchema = z
   .object({
     id,
@@ -81,7 +88,7 @@ const ClaimSchema = z
     signals: signalList,
     sourceIds: idList,
     competitorId: id.optional(),
-    qualifiers: z.array(shortText).max(20).optional(),
+    qualifiers: z.array(ClaimQualifierSchema).max(20).optional(),
     expiresAt: date.optional(),
     requirement: RequirementSchema.optional(),
   })
@@ -93,6 +100,7 @@ const CompetitorSchema = z
     name: shortText,
     category: shortText,
     aliases: signalList,
+    unapprovedComparisonEnforcement: z.enum(["block", "warn", "suggest"]),
     notes: longText.optional(),
     sourceIds: idList,
   })

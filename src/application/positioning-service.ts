@@ -2,9 +2,10 @@ import {
   deriveDecision,
   evaluateContent,
   evidenceForSourceIds,
+  claimSupport,
+  messageSupport,
   resolvePositioningContext,
   sortFindings,
-  sourceIsActive,
   type BriefMessage,
   type BriefRule,
   type ContentBrief,
@@ -12,6 +13,7 @@ import {
   type ContentDecision,
   type ExplainedItem,
   type Finding,
+  type FindingType,
   type MessageCoverage,
   type PositioningItemKind,
   type PositioningPack,
@@ -23,6 +25,7 @@ import type {
   SemanticFindingCandidate,
   SemanticReviewer,
 } from "./semantic-reviewer.js";
+import { SEMANTIC_FINDING_TYPES } from "./semantic-reviewer.js";
 
 export interface CheckContentInput {
   readonly content: string;
@@ -50,13 +53,98 @@ function sourceIdsForItem(item: ExplainedItem["item"]): readonly string[] {
   return [item.id];
 }
 
+const FINDING_TYPES: ReadonlySet<FindingType> = new Set([
+  "contradiction",
+  "missing_message",
+  "unsupported_claim",
+  "stale_evidence",
+  "required_disclosure",
+  "prohibited_language",
+  "campaign_drift",
+  "positioning_opportunity",
+]);
+
+interface ParsedFindingId {
+  readonly type: FindingType;
+  readonly policyId: string;
+  readonly certainty: "confirmed" | "model_assisted";
+  readonly locationStart?: number;
+}
+
+function parseFindingId(value: string): ParsedFindingId | undefined {
+  const parts = value.split(":");
+  if (parts.length !== 3 && parts.length !== 4) return undefined;
+  const [type, policyId, location, suffix] = parts;
+  if (
+    type === undefined ||
+    !FINDING_TYPES.has(type as FindingType) ||
+    policyId === undefined ||
+    policyId.length === 0 ||
+    location === undefined ||
+    (suffix !== undefined && suffix !== "semantic")
+  ) {
+    return undefined;
+  }
+  const locationStart = location === "document" ? undefined : Number(location);
+  if (
+    location !== "document" &&
+    (!Number.isInteger(locationStart) || (locationStart ?? -1) < 0)
+  ) {
+    return undefined;
+  }
+  return {
+    type: type as FindingType,
+    policyId,
+    certainty: suffix === "semantic" ? "model_assisted" : "confirmed",
+    ...(locationStart === undefined ? {} : { locationStart }),
+  };
+}
+
+function repairGuidance(type: FindingType, item: ExplainedItem["item"]): string {
+  if (type === "stale_evidence") {
+    return "Verify and approve current evidence before using this policy message.";
+  }
+  if (type === "campaign_drift" && ("statement" in item || "thesis" in item)) {
+    return "Remove this message or replace it with an approved campaign message.";
+  }
+  if ("type" in item && "triggerSignals" in item) {
+    return item.suggestion ?? item.description;
+  }
+  if ("statement" in item) {
+    if (item.status === "prohibited") {
+      return "Remove this claim or replace it with an active approved claim.";
+    }
+    if (item.status === "review_required") {
+      return "Send this claim for evidence and positioning review before publication.";
+    }
+    const qualifiers = (item.qualifiers ?? [])
+      .map(({ statement }) => statement)
+      .join(" | ");
+    return qualifiers.length === 0
+      ? `Use only the approved claim: ${item.statement}`
+      : `Use the approved claim with its qualifier: ${item.statement} | ${qualifiers}`;
+  }
+  if ("thesis" in item) {
+    return `Cover this approved message in the writer's own words: ${item.thesis} ${item.value}`;
+  }
+  if ("narrative" in item) {
+    return `Align the draft with the campaign narrative: ${item.narrative}`;
+  }
+  if ("category" in item) {
+    return "Remove the comparison or use an active, qualified, evidence-backed claim.";
+  }
+  return "Review the linked policy and evidence before changing the draft.";
+}
+
 function messageFromCoverage(
   pack: PositioningPack,
   coverage: MessageCoverage,
-): BriefMessage {
+  now: Date,
+): BriefMessage | undefined {
   const collection = coverage.kind === "pillar" ? pack.pillars : pack.claims;
   const item = collection.find(({ id }) => id === coverage.id);
   if (item === undefined) throw new Error(`validated pack is missing '${coverage.id}'`);
+  if (!messageSupport(pack, item, now).active) return undefined;
   return {
     id: item.id,
     kind: coverage.kind,
@@ -70,10 +158,12 @@ function levelGroup(
   pack: PositioningPack,
   requirements: readonly MessageCoverage[],
   level: RequirementLevel,
+  now: Date,
 ): readonly BriefMessage[] {
   return requirements
     .filter(({ requirement }) => requirement === level)
-    .map((coverage) => messageFromCoverage(pack, coverage));
+    .map((coverage) => messageFromCoverage(pack, coverage, now))
+    .filter((message): message is BriefMessage => message !== undefined);
 }
 
 function locationForCandidate(
@@ -130,10 +220,7 @@ function semanticFinding(
   appliedPolicyIds: ReadonlySet<string>,
   now: Date,
 ): Finding {
-  if (
-    candidate.type !== "contradiction" &&
-    candidate.type !== "positioning_opportunity"
-  ) {
+  if (!SEMANTIC_FINDING_TYPES.has(candidate.type)) {
     throw new Error(
       `semantic finding has unsupported type '${String(candidate.type)}'`,
     );
@@ -194,7 +281,9 @@ function semanticFinding(
   };
 }
 
-function findItem(pack: PositioningPack, itemId: string): ExplainedItem | undefined {
+type FoundItem = Pick<ExplainedItem, "kind" | "id" | "item">;
+
+function findItem(pack: PositioningPack, itemId: string): FoundItem | undefined {
   const groups: readonly [PositioningItemKind, readonly ExplainedItem["item"][]][] = [
     ["source", pack.sources],
     ["pillar", pack.pillars],
@@ -205,7 +294,7 @@ function findItem(pack: PositioningPack, itemId: string): ExplainedItem | undefi
   ];
   for (const [kind, collection] of groups) {
     const item = collection.find(({ id }) => id === itemId);
-    if (item !== undefined) return { kind, id: itemId, item, evidence: [] };
+    if (item !== undefined) return { kind, id: itemId, item };
   }
   return undefined;
 }
@@ -244,8 +333,10 @@ export class PositioningService {
         return {
           id: item.id,
           type: "campaign_prohibited_message",
+          enforcement: prohibition.enforcement,
           description:
             "thesis" in item ? `${item.thesis} ${item.value}` : item.statement,
+          triggerSignals: item.signals,
           suggestion: "Use an approved campaign message instead.",
           sourceIds: [...new Set([...campaign.sourceIds, ...item.sourceIds])].sort(),
         };
@@ -254,14 +345,8 @@ export class PositioningService {
     const approvedClaims = resolved.claims
       .filter(
         (claim) =>
-          claim.status === "approved" &&
           !campaignProhibitedIds.has(claim.id) &&
-          (claim.expiresAt === undefined ||
-            claim.expiresAt >= now.toISOString().slice(0, 10)) &&
-          claim.sourceIds.some((sourceId) => {
-            const source = this.#pack.sources.find(({ id }) => id === sourceId);
-            return source !== undefined && sourceIsActive(source, now);
-          }),
+          claimSupport(this.#pack, claim, now).active,
       )
       .map((claim) => ({
         id: claim.id,
@@ -286,9 +371,9 @@ export class PositioningService {
               desiredAction: resolved.campaign.desiredAction,
             },
           }),
-      mustCarry: levelGroup(this.#pack, resolved.requirements, "must"),
-      shouldCarry: levelGroup(this.#pack, resolved.requirements, "should"),
-      opportunities: levelGroup(this.#pack, resolved.requirements, "opportunity"),
+      mustCarry: levelGroup(this.#pack, resolved.requirements, "must", now),
+      shouldCarry: levelGroup(this.#pack, resolved.requirements, "should", now),
+      opportunities: levelGroup(this.#pack, resolved.requirements, "opportunity", now),
       approvedClaims,
       avoid: [
         ...campaignAvoid,
@@ -300,7 +385,9 @@ export class PositioningService {
           .map((claim) => ({
             id: claim.id,
             type: "prohibited_claim" as const,
+            enforcement: claim.enforcement,
             description: claim.statement,
+            triggerSignals: claim.signals,
             suggestion: "Use an active approved claim instead.",
             sourceIds: claim.sourceIds,
           })),
@@ -309,25 +396,67 @@ export class PositioningService {
           .map((rule) => ({
             id: rule.id,
             type: rule.type,
+            enforcement: rule.enforcement,
             description: rule.description,
+            triggerSignals: rule.triggerSignals,
+            ...(rule.requiredSignals === undefined
+              ? {}
+              : { requiredSignals: rule.requiredSignals }),
             ...(rule.suggestion === undefined ? {} : { suggestion: rule.suggestion }),
             sourceIds: rule.sourceIds,
           })),
       ].sort((left, right) => left.id.localeCompare(right.id)),
+      disclosures: resolved.rules
+        .filter(({ type }) => type === "required_disclosure")
+        .map((rule) => ({
+          id: rule.id,
+          type: rule.type,
+          enforcement: rule.enforcement,
+          description: rule.description,
+          triggerSignals: rule.triggerSignals,
+          ...(rule.requiredSignals === undefined
+            ? {}
+            : { requiredSignals: rule.requiredSignals }),
+          ...(rule.suggestion === undefined ? {} : { suggestion: rule.suggestion }),
+          sourceIds: rule.sourceIds,
+        }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
       sourceIds: resolved.sourceIds,
     };
   }
 
-  explainItem(itemId: string): ExplainedItem {
-    const explained = findItem(this.#pack, itemId);
-    if (explained === undefined) throw new PositioningItemNotFoundError(itemId);
+  explainItem(itemId: string, context?: ContentContext): ExplainedItem {
+    const parsedFinding = parseFindingId(itemId);
+    const policyId = parsedFinding?.policyId ?? itemId;
+    const explained = findItem(this.#pack, policyId);
+    if (explained === undefined) throw new PositioningItemNotFoundError(policyId);
+    const applicability =
+      context === undefined
+        ? undefined
+        : this.getContext(context).applicablePolicies.find(
+            ({ policyId: applicableId }) => applicableId === policyId,
+          );
     return {
       ...explained,
+      requestedId: itemId,
       evidence: evidenceForSourceIds(
         this.#pack,
         sourceIdsForItem(explained.item),
         this.#now(),
       ),
+      ...(parsedFinding === undefined
+        ? {}
+        : {
+            finding: {
+              type: parsedFinding.type,
+              certainty: parsedFinding.certainty,
+              ...(parsedFinding.locationStart === undefined
+                ? {}
+                : { locationStart: parsedFinding.locationStart }),
+              ...(applicability === undefined ? {} : { applicability }),
+              repairGuidance: repairGuidance(parsedFinding.type, explained.item),
+            },
+          }),
     };
   }
 

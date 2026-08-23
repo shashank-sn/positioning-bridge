@@ -112,7 +112,7 @@ positioning pack.
 sources:
 
 - [MCP TypeScript server package](https://www.npmjs.com/package/%40modelcontextprotocol/server)
-- [MCP TypeScript server guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/server.md)
+- [MCP TypeScript stdio guide](https://ts.sdk.modelcontextprotocol.io/v2/serving/stdio.html)
 - [MCP SDK 2026-07-28 stdio support guide](https://ts.sdk.modelcontextprotocol.io/v2/migration/support-2026-07-28)
 - [MCP tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
 - [MCP Streamable HTTP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/basic/transports/streamable-http.mdx)

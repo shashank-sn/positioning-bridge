@@ -16,3 +16,13 @@ this project follows [Semantic Versioning](https://semver.org/).
 - four read-only MCP v2 tools over stdio;
 - architecture policy, tests, coverage, CI, docs, examples, and OSS governance.
 - clean-install tarball allowlist, binary, library, and MCP handshake checks.
+- stable applicability explanations for every resolved policy;
+- qualifier-aware approved claims and configurable enforcement for unapproved competitor
+  comparisons;
+- campaign validation that prevents non-approved claims from entering carry
+  requirements;
+- support-aware briefs that never recommend expired or inactive pillars and claims;
+- campaign narrowing that suppresses company carry requirements for prohibited messages;
+- complete, tool-specific MCP output schemas and finding-ID explanations;
+- public-repository metadata, reporting routes, supported Node.js CI lanes, and
+  immutable GitHub Action references.

@@ -92,6 +92,52 @@ describe("CLI", () => {
     });
   });
 
+  it("uses the pack default locale when --locale is omitted", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "positioning-locale-test-"));
+    const pack = join(directory, "positioning.yaml");
+    await writeFile(
+      pack,
+      stringify({
+        ...validPack,
+        defaultLocale: "en-gb",
+        contexts: {
+          ...validPack.contexts,
+          locales: [
+            ...validPack.contexts.locales,
+            { id: "en-gb", name: "English (United Kingdom)" },
+          ],
+        },
+      }),
+      "utf8",
+    );
+    const checked = capture(
+      "The current positioning policy stays under company control.",
+    );
+
+    expect(
+      await runCli(
+        [
+          "check",
+          "--pack",
+          pack,
+          "--stdin",
+          "--audience",
+          "platform-leader",
+          "--channel",
+          "landing-page",
+          "--funnel-stage",
+          "consideration",
+          "--json",
+        ],
+        checked.io,
+        {},
+      ),
+    ).toBe(0);
+    expect(JSON.parse(checked.stdout[0] ?? "{}")).toMatchObject({
+      context: { localeId: "en-gb" },
+    });
+  });
+
   it("checks a content file with an explicit campaign", async () => {
     const { directory, pack } = await fixtureFiles();
     const content = join(directory, "draft.md");
@@ -224,6 +270,8 @@ describe("CLI", () => {
       ),
     ).toBe(1);
     expect(blocked.stdout[0]).toContain("blocked:");
+    expect(blocked.stdout[0]).toContain("rationale:");
+    expect(blocked.stdout[0]).toContain("evidence: source.security (approved, active)");
     expect(await runCli(["validate"], usage.io, {})).toBe(2);
     expect(usage.stderr[0]).toContain("missing required option '--pack'");
   });

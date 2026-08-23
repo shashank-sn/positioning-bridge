@@ -2,18 +2,19 @@
 
 ## supported versions
 
-security fixes are made on the latest released minor version. before a public release,
-the current `main` branch is the only supported revision.
+security fixes are made on the latest released minor version. until an npm package or
+GitHub release exists, the current `main` branch is the only supported revision.
 
 ## report a vulnerability
 
 do not open a public issue.
 
-once a GitHub remote exists, maintainers must enable private vulnerability reporting and
-publish that URL here before the first public release. until then, report through the
-same private channel that supplied this repository. include the affected version,
-impact, reproduction, and any suggested mitigation. do not include real company
-positioning or draft content unless it is required and approved for disclosure.
+use
+[GitHub private vulnerability reporting](https://github.com/shashank-sn/positioning-bridge/security/advisories/new).
+the report is visible to the repository maintainer and security collaborators, not the
+public issue tracker. include the affected version, impact, reproduction, and any
+suggested mitigation. do not include real company positioning or draft content unless it
+is required and approved for disclosure.
 
 maintainers should acknowledge a complete report within five business days, confirm
 severity and scope, prepare a fix and advisory, and credit the reporter unless they ask

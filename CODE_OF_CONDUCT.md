@@ -16,9 +16,10 @@ maintainers may edit, remove, or reject comments, commits, issues, and other
 contributions that break this standard. they may issue a warning, temporary restriction,
 or permanent ban based on severity and pattern.
 
-report conduct problems privately to the maintainers through the same private channel
-used to obtain the source until a public repository publishes a dedicated contact. do
-not put private evidence in a public issue.
+report conduct problems through the repository's
+[private reporting form](https://github.com/shashank-sn/positioning-bridge/security/advisories/new)
+and prefix the title with `conduct:`. this route is private to the repository maintainer
+and security collaborators. do not put private evidence in a public issue.
 
 maintainers must protect reporter privacy, avoid conflicts of interest, and document the
 reason for an enforcement decision to the affected parties when safe.

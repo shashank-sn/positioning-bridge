@@ -1,4 +1,7 @@
 import type {
+  ApplicablePolicy,
+  ApplicablePolicyKind,
+  ApplicabilityReason,
   Campaign,
   ContentContext,
   MessageCoverage,
@@ -10,6 +13,90 @@ import type {
   ResolvedPositioningContext,
   Selector,
 } from "./model.js";
+
+interface MutableApplicablePolicy {
+  readonly policyId: string;
+  readonly kind: ApplicablePolicyKind;
+  readonly reasons: ApplicabilityReason[];
+}
+
+function policyKey(kind: ApplicablePolicyKind, policyId: string): string {
+  return `${kind}:${policyId}`;
+}
+
+function addApplicability(
+  policies: Map<string, MutableApplicablePolicy>,
+  kind: ApplicablePolicyKind,
+  policyId: string,
+  reason: ApplicabilityReason,
+): void {
+  const key = policyKey(kind, policyId);
+  const existing = policies.get(key);
+  if (existing === undefined) {
+    policies.set(key, { policyId, kind, reasons: [reason] });
+    return;
+  }
+  if (
+    !existing.reasons.some(
+      ({ basis, detail }) => basis === reason.basis && detail === reason.detail,
+    )
+  ) {
+    existing.reasons.push(reason);
+  }
+}
+
+function selectorReason(
+  kind: "pillar" | "claim" | "rule",
+  policyId: string,
+  selector: Selector | undefined,
+  context: ContentContext,
+): ApplicabilityReason {
+  const fields = [
+    ["audienceIds", "audienceId"],
+    ["channelIds", "channelId"],
+    ["funnelStageIds", "funnelStageId"],
+    ["campaignIds", "campaignId"],
+    ["localeIds", "localeId"],
+  ] as const;
+  const matches =
+    selector === undefined
+      ? []
+      : fields.flatMap(([selectorField, contextField]) =>
+          selector[selectorField] === undefined
+            ? []
+            : [`${contextField} '${String(context[contextField])}'`],
+        );
+  if (matches.length === 0) {
+    return {
+      basis: "global",
+      detail: `${kind} '${policyId}' has no limiting context selector.`,
+    };
+  }
+  return {
+    basis: "selector_match",
+    detail: `${kind} '${policyId}' matched ${matches.join(", ")}.`,
+  };
+}
+
+function finalizeApplicability(
+  policies: ReadonlyMap<string, MutableApplicablePolicy>,
+): readonly ApplicablePolicy[] {
+  return [...policies.values()]
+    .map(({ policyId, kind, reasons }) => ({
+      policyId,
+      kind,
+      reasons: [...reasons].sort(
+        (left, right) =>
+          left.basis.localeCompare(right.basis) ||
+          left.detail.localeCompare(right.detail),
+      ),
+    }))
+    .sort(
+      (left, right) =>
+        left.policyId.localeCompare(right.policyId) ||
+        left.kind.localeCompare(right.kind),
+    );
+}
 
 export class ContentContextError extends Error {
   readonly field: keyof ContentContext;
@@ -170,6 +257,7 @@ export function resolvePositioningContext(
   requireKnown("funnelStageId", context.funnelStageId, pack.contexts.funnelStages);
   requireKnown("localeId", context.localeId, pack.contexts.locales);
   const campaign = resolveCampaign(pack, context);
+  const applicability = new Map<string, MutableApplicablePolicy>();
 
   const pillars = pack.pillars.filter(
     ({ requirement }) =>
@@ -179,6 +267,22 @@ export function resolvePositioningContext(
     ({ requirement }) =>
       requirement === undefined || matchesSelector(requirement.selectors, context),
   );
+  for (const pillar of pillars) {
+    addApplicability(
+      applicability,
+      "pillar",
+      pillar.id,
+      selectorReason("pillar", pillar.id, pillar.requirement?.selectors, context),
+    );
+  }
+  for (const claim of claims) {
+    addApplicability(
+      applicability,
+      "claim",
+      claim.id,
+      selectorReason("claim", claim.id, claim.requirement?.selectors, context),
+    );
+  }
   const campaignReferences = campaign
     ? [
         ...campaign.mustInclude,
@@ -197,11 +301,23 @@ export function resolvePositioningContext(
       if (item !== undefined && !claims.some(({ id }) => id === item.id))
         claims.push(item);
     }
+    addApplicability(applicability, reference.kind, reference.id, {
+      basis: "campaign_reference",
+      detail: `Active campaign '${campaign?.id ?? ""}' references this ${reference.kind}.`,
+    });
   }
 
   const rules = pack.rules.filter(({ selectors }) =>
     matchesSelector(selectors, context),
   );
+  for (const rule of rules) {
+    addApplicability(
+      applicability,
+      "rule",
+      rule.id,
+      selectorReason("rule", rule.id, rule.selectors, context),
+    );
+  }
   const requirements = new Map<string, MutableRequirement>();
   for (const pillar of pillars) {
     if (pillar.requirement !== undefined) {
@@ -223,15 +339,39 @@ export function resolvePositioningContext(
       );
     }
   }
-  if (campaign !== undefined)
+  if (campaign !== undefined) {
     addCampaignRequirements(campaign, requirements, pillars, claims);
+    for (const prohibition of campaign.prohibited) {
+      requirements.delete(requirementKey(prohibition));
+    }
+  }
 
-  const competitorIds = new Set(
-    claims.flatMap(({ competitorId }) =>
-      competitorId === undefined ? [] : [competitorId],
-    ),
-  );
-  const competitors = pack.competitors.filter(({ id }) => competitorIds.has(id));
+  const competitors = [...pack.competitors];
+  for (const competitor of competitors) {
+    const referencingClaims = claims
+      .filter(({ competitorId }) => competitorId === competitor.id)
+      .map(({ id }) => id)
+      .sort();
+    if (referencingClaims.length === 0) {
+      addApplicability(applicability, "competitor", competitor.id, {
+        basis: "global",
+        detail: `Competitor '${competitor.id}' is available for unapproved comparison checks.`,
+      });
+    } else {
+      for (const claimId of referencingClaims) {
+        addApplicability(applicability, "competitor", competitor.id, {
+          basis: "claim_reference",
+          detail: `Applicable claim '${claimId}' references this competitor.`,
+        });
+      }
+    }
+  }
+  if (campaign !== undefined) {
+    addApplicability(applicability, "campaign", campaign.id, {
+      basis: "active_campaign",
+      detail: `Campaign '${campaign.id}' matches the supplied audience, channel, funnel stage, and locale.`,
+    });
+  }
   const requirementOutput: MessageCoverage[] = [...requirements.values()]
     .map(({ id, kind, level, sourceIds }) => ({
       id,
@@ -245,13 +385,8 @@ export function resolvePositioningContext(
       `${left.kind}:${left.id}`.localeCompare(`${right.kind}:${right.id}`),
     );
 
-  const appliedPolicyIds = [
-    ...pillars.map(({ id }) => id),
-    ...claims.map(({ id }) => id),
-    ...competitors.map(({ id }) => id),
-    ...rules.map(({ id }) => id),
-    ...(campaign === undefined ? [] : [campaign.id]),
-  ].sort();
+  const applicablePolicies = finalizeApplicability(applicability);
+  const appliedPolicyIds = applicablePolicies.map(({ policyId }) => policyId).sort();
   const sourceIds = new Set<string>();
   for (const item of [...pillars, ...claims, ...competitors, ...rules]) {
     for (const sourceId of item.sourceIds) sourceIds.add(sourceId);
@@ -273,6 +408,7 @@ export function resolvePositioningContext(
     rules: [...rules].sort((left, right) => left.id.localeCompare(right.id)),
     requirements: requirementOutput,
     sourceIds: [...sourceIds].sort(),
+    applicablePolicies,
     appliedPolicyIds,
   };
 }

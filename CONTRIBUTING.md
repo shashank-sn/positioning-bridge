@@ -7,13 +7,13 @@ core.
 ## setup
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/shashank-sn/positioning-bridge.git
 cd positioning-bridge
 npm ci
 npm run verify
 ```
 
-Node.js 20 or newer is required.
+Node.js 22 or newer is required.
 
 ## change contract
 

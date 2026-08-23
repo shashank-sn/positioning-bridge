@@ -243,6 +243,17 @@
         "PB-041",
         "PB-042",
         "PB-043",
+        "PB-062",
+        "PB-063"
+      ],
+      "status": "PASS",
+      "owner": "maintainers",
+      "evidence": "docs/testing.md",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "unit",
+      "requirement_ids": [
         "PB-050",
         "PB-051",
         "PB-052",
@@ -251,17 +262,14 @@
         "PB-055",
         "PB-060",
         "PB-061",
-        "PB-062",
-        "PB-063",
         "PB-064",
         "PB-070",
         "PB-071",
         "PB-072",
         "PB-073"
       ],
-      "status": "PASS",
-      "owner": "maintainers",
-      "evidence": "build/evidence/test-evidence.json",
+      "status": "INAPPLICABLE",
+      "reason": "These requirements concern architecture, public adapters, release artifacts, or human use; isolated domain tests do not add meaningful evidence.",
       "context_source": "mixed"
     },
     {
@@ -301,39 +309,31 @@
         "PB-064",
         "PB-070",
         "PB-071",
-        "PB-072",
-        "PB-073"
+        "PB-072"
       ],
       "status": "PASS",
       "owner": "requirements test track",
-      "evidence": "build/evidence/test-evidence.json",
+      "evidence": "docs/testing.md",
+      "context_source": "requirements"
+    },
+    {
+      "kind": "acceptance",
+      "requirement_ids": ["PB-073"],
+      "status": "NOT_RUN",
+      "owner": "maintainers",
+      "reason": "The README quick start has not yet been completed by an independent new user.",
       "context_source": "requirements"
     },
     {
       "kind": "integration",
       "requirement_ids": [
         "PB-001",
-        "PB-002",
-        "PB-003",
         "PB-004",
         "PB-010",
-        "PB-011",
-        "PB-012",
-        "PB-013",
         "PB-020",
         "PB-021",
         "PB-022",
-        "PB-023",
-        "PB-024",
-        "PB-030",
         "PB-031",
-        "PB-032",
-        "PB-033",
-        "PB-040",
-        "PB-041",
-        "PB-042",
-        "PB-043",
-        "PB-050",
         "PB-051",
         "PB-052",
         "PB-053",
@@ -342,16 +342,45 @@
         "PB-060",
         "PB-061",
         "PB-062",
-        "PB-063",
         "PB-064",
         "PB-070",
-        "PB-071",
-        "PB-072",
-        "PB-073"
+        "PB-072"
       ],
       "status": "PASS",
       "owner": "protocol and package test track",
-      "evidence": "build/evidence/test-evidence.json",
+      "evidence": "docs/testing.md",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "integration",
+      "requirement_ids": ["PB-071", "PB-073"],
+      "status": "NOT_RUN",
+      "owner": "maintainers",
+      "reason": "Live GitHub CI and the independent preferred-host walkthrough can run only after the public repository exists.",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "integration",
+      "requirement_ids": [
+        "PB-002",
+        "PB-003",
+        "PB-011",
+        "PB-012",
+        "PB-013",
+        "PB-023",
+        "PB-024",
+        "PB-030",
+        "PB-032",
+        "PB-033",
+        "PB-040",
+        "PB-041",
+        "PB-042",
+        "PB-043",
+        "PB-050",
+        "PB-063"
+      ],
+      "status": "INAPPLICABLE",
+      "reason": "These deterministic policy behaviors are fully exercised without crossing a process, adapter, or package boundary.",
       "context_source": "mixed"
     },
     {
@@ -379,11 +408,6 @@
         "PB-042",
         "PB-043",
         "PB-050",
-        "PB-051",
-        "PB-052",
-        "PB-053",
-        "PB-054",
-        "PB-055",
         "PB-060",
         "PB-061",
         "PB-062",
@@ -391,12 +415,18 @@
         "PB-064",
         "PB-070",
         "PB-071",
-        "PB-072",
-        "PB-073"
+        "PB-072"
       ],
-      "status": "PASS",
-      "owner": "CLI and MCP QA",
-      "evidence": "build/evidence/test-evidence.json",
+      "status": "INAPPLICABLE",
+      "reason": "These requirements have no user-facing visual interface; their behavior is covered by the unit, acceptance, and integration tracks.",
+      "context_source": "requirements"
+    },
+    {
+      "kind": "ui-qa",
+      "requirement_ids": ["PB-051", "PB-052", "PB-053", "PB-054", "PB-055", "PB-073"],
+      "status": "NOT_RUN",
+      "owner": "maintainers",
+      "reason": "A human has not yet completed the CLI and MCP quick-start procedure in an independent preferred host.",
       "context_source": "requirements"
     }
   ]

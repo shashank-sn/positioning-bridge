@@ -107,7 +107,12 @@ export const validPack: PositioningPack = {
       enforcement: "warn",
       signals: ["does not train models on submitted customer content"],
       sourceIds: ["source.security"],
-      qualifiers: ["Applies to the standard hosted product."],
+      qualifiers: [
+        {
+          statement: "Applies to the standard hosted product.",
+          signals: ["standard hosted product"],
+        },
+      ],
       requirement: {
         level: "should",
         selectors: { channelIds: ["landing-page"], localeIds: ["en"] },
@@ -152,6 +157,7 @@ export const validPack: PositioningPack = {
       name: "RivalSuite",
       category: "Enterprise writing platform",
       aliases: ["RivalSuite", "Rival Suite"],
+      unapprovedComparisonEnforcement: "block",
       sourceIds: ["source.competitor"],
     },
   ],

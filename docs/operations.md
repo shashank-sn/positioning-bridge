@@ -56,12 +56,17 @@ the draft.
    directory.
 4. confirm its installed binary, example validation, library export, file allowlist, and
    stdio MCP handshake all pass.
-5. create a signed Git tag only after those checks pass.
-6. publish to npm only after package ownership, provenance, and the GitHub remote are
-   configured by a maintainer.
+5. confirm the release commit is on the protected `main` branch and its CI is green.
+6. for the first package version, publish through an authenticated maintainer session;
+   npm requires a package to exist before trusted publishing can be configured.
+7. configure `publish.yml` as the package's GitHub Actions trusted publisher immediately
+   after the first publication.
+8. publish later versions from a GitHub release so npm records OIDC provenance from the
+   public source repository.
 
 the GitHub repository owner and release administrator is `@shashank-sn`. npm ownership
-and release credentials remain unconfigured until a separate package publication.
+must resolve to that account after the first publication. the trusted publisher must be
+`shashank-sn/positioning-bridge`, workflow `publish.yml`, with `npm publish` allowed.
 
 ## semantic adapters
 

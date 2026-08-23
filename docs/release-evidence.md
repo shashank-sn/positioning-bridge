@@ -17,6 +17,7 @@ passed its binary, library, documentation-link, example, and MCP handshake check
 
 ## release boundary
 
-this evidence covers the public source repository and its automated release path. no npm
-package, git tag, or GitHub release was created. product-positioning approval, writer
+this evidence covers the public source repository bootstrap. it does not, by itself,
+prove an npm publication or downloaded registry artifact. verify those separately with
+the exact package version and tarball integrity. product-positioning approval, writer
 usefulness, and an independent preferred-host walkthrough remain human checks.

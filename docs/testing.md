@@ -16,13 +16,17 @@ means that test shape cannot add evidence for those requirements. `NOT_RUN` stay
 | PB-050        | dependency direction and prohibited coupling                           | `npm run architecture:check`                                                                |
 | PB-051–PB-055 | CLI contracts, MCP schemas, parity, and stdio handshake                | `tests/cli`, `tests/mcp`, `tests/integration/surface-parity.test.ts`, `npm run smoke:stdio` |
 | PB-060–PB-064 | local execution, explicit paths, limits, literal input, and read-only  | `tests/cli`, `tests/domain/evaluate.test.ts`, `tests/integration/surface-parity.test.ts`    |
-| PB-070–PB-071 | OSS document integrity and CI definition                               | `npm run docs:check`                                                                        |
+| PB-070        | OSS document integrity                                                 | `npm run docs:check`                                                                        |
+| PB-071        | CI definition and live supported-runtime execution                     | `npm run docs:check`, [release evidence](release-evidence.md)                               |
 | PB-072        | exact tarball allowlist, links, install, CLI, library, and MCP         | `npm run smoke:package`                                                                     |
 | PB-073        | independent README quick start                                         | human check; intentionally `NOT_RUN` in `config/test-plan.json`                             |
 
 `npm run verify` runs formatting, lint, type checking, coverage, schema drift,
 architecture, documentation, build, and stdio checks. `npm run smoke:package` then tests
 the exact packed artifact. CI repeats both and runs the supported Node.js matrix.
+
+the first public `main` run and its exact commit are recorded in
+[release evidence](release-evidence.md). pull requests also run dependency review.
 
 ## release boundary
 

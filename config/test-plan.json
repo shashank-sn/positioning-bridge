@@ -353,10 +353,18 @@
     },
     {
       "kind": "integration",
-      "requirement_ids": ["PB-071", "PB-073"],
+      "requirement_ids": ["PB-071"],
+      "status": "PASS",
+      "owner": "GitHub Actions",
+      "evidence": "docs/release-evidence.md",
+      "context_source": "mixed"
+    },
+    {
+      "kind": "integration",
+      "requirement_ids": ["PB-073"],
       "status": "NOT_RUN",
       "owner": "maintainers",
-      "reason": "Live GitHub CI and the independent preferred-host walkthrough can run only after the public repository exists.",
+      "reason": "An independent user has not yet completed the README quick start in a preferred MCP host.",
       "context_source": "mixed"
     },
     {

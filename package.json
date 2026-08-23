@@ -13,6 +13,10 @@
   "bugs": {
     "url": "https://github.com/shashank-sn/positioning-bridge/issues"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": [
     "positioning",
     "messaging",

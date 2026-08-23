@@ -1,6 +1,7 @@
 # Positioning Bridge
 
 [![ci](https://github.com/shashank-sn/positioning-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/shashank-sn/positioning-bridge/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/positioning-bridge.svg)](https://www.npmjs.com/package/positioning-bridge)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Positioning Bridge checks whether a draft carries the right company messages for its
@@ -25,9 +26,20 @@ campaign, competitor, and source that caused it.
 the decision is `pass`, `needs_revision`, or `blocked`. there is no composite brand
 score. deterministic and model-assisted evidence stay labeled separately.
 
-## run the example
+## install
 
 requirements: Node.js 22 or newer and npm.
+
+```bash
+npm install --global positioning-bridge@0.1.0
+positioning-bridge init --output company-positioning.yaml
+positioning-bridge validate --pack company-positioning.yaml
+```
+
+the starter pack is deliberately fictional. replace it with company-approved policy
+before using its results in a content workflow.
+
+## run the source example
 
 ```bash
 git clone https://github.com/shashank-sn/positioning-bridge.git
@@ -70,24 +82,19 @@ create a starter pack without overwriting an existing file:
 node dist/cli/main.js init --output company-positioning.yaml
 ```
 
-the project is open source on GitHub under the MIT license. `positioning-bridge` has not
-been published to npm yet, so use the clone workflow above for `0.1.0`.
+the project is open source on GitHub under the MIT license. npm releases use exact
+versions so a writer and an MCP host can run the same policy engine.
 
 ## connect an MCP host
 
-build the repository, then give the host the absolute pack and executable paths:
+after the global install, give the host the absolute pack path:
 
 ```json
 {
   "mcpServers": {
     "positioning-bridge": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/positioning-bridge/dist/cli/main.js",
-        "serve",
-        "--pack",
-        "/absolute/path/to/company-positioning.yaml"
-      ]
+      "command": "positioning-bridge",
+      "args": ["serve", "--pack", "/absolute/path/to/company-positioning.yaml"]
     }
   }
 }
@@ -144,6 +151,10 @@ patterns. neither package imports the other, and neither result is publication a
 
 ## TypeScript library
 
+```bash
+npm install positioning-bridge@0.1.0
+```
+
 ```ts
 import { PositioningService, loadPack } from "positioning-bridge";
 
@@ -184,8 +195,9 @@ live in [operations.md](docs/operations.md).
 ## project status
 
 `0.1.0` is the local-first foundation. it does not include a hosted control plane, web
-UI, remote model provider, CMS crawler, publication workflow, or performance analytics.
-those boundaries are recorded in [ADR 0001](docs/adr/0001-domain-policy-core.md).
+UI, remote model provider, CMS crawler, content-publication workflow, or performance
+analytics. those boundaries are recorded in
+[ADR 0001](docs/adr/0001-domain-policy-core.md).
 
 read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a change. use
 [GitHub Issues](https://github.com/shashank-sn/positioning-bridge/issues) for

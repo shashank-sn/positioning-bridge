@@ -2,8 +2,8 @@
 
 ## supported versions
 
-security fixes are made on the latest released minor version. until an npm package or
-GitHub release exists, the current `main` branch is the only supported revision.
+security fixes are made on the latest version published to npm. repository-only changes
+are unsupported until they are included in a release.
 
 ## report a vulnerability
 

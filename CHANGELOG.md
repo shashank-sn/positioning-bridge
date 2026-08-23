@@ -26,3 +26,5 @@ this project follows [Semantic Versioning](https://semver.org/).
 - complete, tool-specific MCP output schemas and finding-ID explanations;
 - public-repository metadata, reporting routes, supported Node.js CI lanes, and
   immutable GitHub Action references.
+- exact npm installation commands, public-registry metadata, and OIDC trusted publishing
+  for releases after the initial package bootstrap.

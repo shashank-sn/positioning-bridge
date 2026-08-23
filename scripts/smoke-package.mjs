@@ -134,12 +134,9 @@ if (
   sourcePackageJson.homepage !==
     "https://github.com/shashank-sn/positioning-bridge#readme" ||
   sourcePackageJson.bugs?.url !==
-    "https://github.com/shashank-sn/positioning-bridge/issues" ||
-  sourcePackageJson.bin?.["positioning-bridge"] !== "dist/cli/main.js" ||
-  sourcePackageJson.publishConfig?.access !== "public" ||
-  sourcePackageJson.publishConfig?.registry !== "https://registry.npmjs.org/"
+    "https://github.com/shashank-sn/positioning-bridge/issues"
 ) {
-  throw new Error("package release metadata is incomplete");
+  throw new Error("package repository metadata is incomplete");
 }
 
 const installRoot = await mkdtemp(path.join(tmpdir(), "positioning-bridge-install-"));

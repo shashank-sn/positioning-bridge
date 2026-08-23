@@ -13,10 +13,6 @@
   "bugs": {
     "url": "https://github.com/shashank-sn/positioning-bridge/issues"
   },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
   "keywords": [
     "positioning",
     "messaging",
@@ -31,7 +27,7 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "bin": {
-    "positioning-bridge": "dist/cli/main.js"
+    "positioning-bridge": "./dist/cli/main.js"
   },
   "exports": {
     ".": {

@@ -21,7 +21,6 @@ const required = [
   "examples/acme/positioning.yaml",
   ".github/workflows/ci.yml",
   ".github/workflows/dependency-review.yml",
-  ".github/workflows/publish.yml",
   ".github/CODEOWNERS",
   ".github/dependabot.yml",
   ".github/release.yml",
@@ -121,22 +120,6 @@ for (const [file, fragments] of [
     ],
   ],
   [".github/workflows/dependency-review.yml", ["actions/dependency-review-action@"]],
-  [
-    ".github/workflows/publish.yml",
-    [
-      "actions: read",
-      "id-token: write",
-      "fetch-depth: 0",
-      "persist-credentials: false",
-      "github.event.release.tag_name",
-      "git merge-base --is-ancestor",
-      "gh run list --workflow ci.yml",
-      "package-manager-cache: false",
-      "npm audit --audit-level=moderate",
-      "npm run smoke:package",
-      "npm publish --access public",
-    ],
-  ],
 ]) {
   const text = await readFile(path.join(root, file), "utf8");
   for (const fragment of fragments) {

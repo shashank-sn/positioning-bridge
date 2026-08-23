@@ -8,6 +8,11 @@ updates:
     groups:
       development:
         dependency-type: development
+    ignore:
+      # typescript-eslint 8.67.0 declares support only through TypeScript 6.0.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
